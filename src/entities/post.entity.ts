@@ -3,7 +3,8 @@ import { Field, ObjectType } from "type-graphql";
 
 @ObjectType()
 @Entity()
-export class Book {
+export class Post {
+  @Field()
   @PrimaryKey()
   id: number;
 
@@ -15,5 +16,5 @@ export class Book {
 
   @Field()
   @Property()
-  name: string;
+  title: string;
 }

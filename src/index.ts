@@ -1,4 +1,5 @@
 // console.log("Hellop@!");
+import "reflect-metadata";
 import { MikroORM } from "@mikro-orm/core";
 import { ApolloServer } from "apollo-server-express";
 // import { Book } from "./entities/book.entity";
@@ -7,6 +8,7 @@ import { buildSchema } from "type-graphql";
 import config from "./mikro-orm.config";
 import { BookResolver } from "./resolvers/book.resolver";
 import http from "http";
+import { PostResolver } from "./resolvers/post.resolver";
 
 async function main() {
   try {
@@ -20,7 +22,8 @@ async function main() {
     }
 
     const server = new ApolloServer({
-      schema: await buildSchema({ resolvers: [BookResolver] }),
+      schema: await buildSchema({ resolvers: [BookResolver, PostResolver] }),
+      context: orm,
     });
 
     await server.start();

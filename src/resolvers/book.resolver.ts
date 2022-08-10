@@ -6,4 +6,8 @@ export class BookResolver {
   hello() {
     return "Hello World 1";
   }
+  @Query(() => String)
+  hello2() {
+    return "Hello World 2";
+  }
 }
