@@ -26,15 +26,27 @@ let PostResolver = class PostResolver {
         return post;
     }
     async updatePost(id, title, { em }) {
-        const post = await em.getRepository(post_entity_1.Post).findOneOrFail({ id });
-        post.title = title;
-        await em.persist(post).flush();
-        return post;
+        try {
+            const post = await em.getRepository(post_entity_1.Post).findOneOrFail({ id });
+            post.title = title;
+            console.log(post);
+            return post;
+        }
+        catch (err) {
+            console.error(err.message);
+            return null;
+        }
     }
     async deletePost(id, { em }) {
-        const post = await em.getRepository(post_entity_1.Post).findOneOrFail({ id });
-        await em.getRepository(post_entity_1.Post).remove(post).flush();
-        return true;
+        try {
+            const post = await em.getRepository(post_entity_1.Post).findOneOrFail({ id });
+            await em.getRepository(post_entity_1.Post).remove(post).flush();
+            return true;
+        }
+        catch (err) {
+            console.error(err.message);
+            return false;
+        }
     }
 };
 __decorate([
@@ -53,7 +65,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "addPost", null);
 __decorate([
-    (0, type_graphql_1.Mutation)(() => post_entity_1.Post),
+    (0, type_graphql_1.Mutation)(() => post_entity_1.Post, { nullable: true }),
     __param(0, (0, type_graphql_1.Arg)("id")),
     __param(1, (0, type_graphql_1.Arg)("title")),
     __param(2, (0, type_graphql_1.Ctx)()),
@@ -62,7 +74,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "updatePost", null);
 __decorate([
-    (0, type_graphql_1.Mutation)(() => post_entity_1.Post),
+    (0, type_graphql_1.Mutation)(() => Boolean, { nullable: true }),
     __param(0, (0, type_graphql_1.Arg)("id")),
     __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),

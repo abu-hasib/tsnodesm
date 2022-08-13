@@ -21,21 +21,32 @@ export class PostResolver {
     ctx.em.persist(post).flush();
     return post;
   }
-  @Mutation(() => Post)
+  @Mutation(() => Post, { nullable: true })
   public async updatePost(
     @Arg("id") id: number,
     @Arg("title") title: string,
     @Ctx() { em }: MyContext
   ) {
-    const post = await em.getRepository(Post).findOneOrFail({ id });
-    post.title = title;
-    await em.persist(post).flush();
-    return post;
+    try {
+      const post = await em.getRepository(Post).findOneOrFail({ id });
+      post.title = title;
+      console.log(post);
+      return post;
+    } catch (err) {
+      console.error(err.message);
+
+      return null;
+    }
   }
-  @Mutation(() => Post)
+  @Mutation(() => Boolean, { nullable: true })
   public async deletePost(@Arg("id") id: number, @Ctx() { em }: MyContext) {
-    const post = await em.getRepository(Post).findOneOrFail({ id });
-    await em.getRepository(Post).remove(post).flush();
-    return true;
+    try {
+      const post = await em.getRepository(Post).findOneOrFail({ id });
+      await em.getRepository(Post).remove(post).flush();
+      return true;
+    } catch (err) {
+      console.error(err.message);
+      return false;
+    }
   }
 }
