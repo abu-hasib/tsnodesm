@@ -9,6 +9,7 @@ import config from "./mikro-orm.config";
 import { BookResolver } from "./resolvers/book.resolver";
 import http from "http";
 import { PostResolver } from "./resolvers/post.resolver";
+import { UserResolver } from "./resolvers/user.resolver";
 
 async function main() {
   try {
@@ -22,7 +23,9 @@ async function main() {
     }
 
     const server = new ApolloServer({
-      schema: await buildSchema({ resolvers: [BookResolver, PostResolver] }),
+      schema: await buildSchema({
+        resolvers: [BookResolver, PostResolver, UserResolver],
+      }),
       context: orm,
     });
 
@@ -37,7 +40,7 @@ async function main() {
       `🚀 Server ready at http://localhost:4000${server.graphqlPath}`
     );
 
-    // const book = new Book();
+    // const book = new Book();n
     // book.name = "Bisi Adeyanju";
     // const book1 = new Book();
     // const book2 = new Book();

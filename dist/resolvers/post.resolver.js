@@ -26,6 +26,8 @@ let PostResolver = class PostResolver {
         return post;
     }
     async updatePost(id, title, { em }) {
+        if (!title)
+            return false;
         try {
             const post = await em.getRepository(post_entity_1.Post).findOneOrFail({ id });
             post.title = title;

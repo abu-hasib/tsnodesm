@@ -1,12 +1,6 @@
-import { Connection, EntityManager, IDatabaseDriver } from "@mikro-orm/core";
 import { Post } from "../entities/post.entity";
 import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql";
-
-interface MyContext {
-  req: Request;
-  res: Response;
-  em: EntityManager<IDatabaseDriver<Connection>>;
-}
+import { MyContext } from "src/utils/interfaces/context.interface";
 
 @Resolver(() => Post)
 export class PostResolver {
@@ -27,6 +21,7 @@ export class PostResolver {
     @Arg("title") title: string,
     @Ctx() { em }: MyContext
   ) {
+    if (!title) return false;
     try {
       const post = await em.getRepository(Post).findOneOrFail({ id });
       post.title = title;

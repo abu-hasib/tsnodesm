@@ -1,9 +1,10 @@
 import { MikroORM } from "@mikro-orm/core";
 import { Book } from "./entities/book.entity";
 import { Post } from "./entities/post.entity";
+import { User } from "./entities/user.entity";
 
 export default {
-  entities: [Book, Post],
+  entities: [Book, Post, User],
   migrations: {
     path: "src/migrations",
     tableName: "migrations",
