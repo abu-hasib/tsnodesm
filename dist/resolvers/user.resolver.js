@@ -21,6 +21,32 @@ const user_entity_1 = require("../entities/user.entity");
 const argon2_1 = __importDefault(require("argon2"));
 const user_validator_1 = __importDefault(require("../contracts/validators/user.validator"));
 const class_validator_1 = require("class-validator");
+let FieldError = class FieldError {
+};
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", String)
+], FieldError.prototype, "field", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", String)
+], FieldError.prototype, "message", void 0);
+FieldError = __decorate([
+    (0, type_graphql_1.ObjectType)()
+], FieldError);
+let UserResponse = class UserResponse {
+};
+__decorate([
+    (0, type_graphql_1.Field)(() => [FieldError], { nullable: true }),
+    __metadata("design:type", Array)
+], UserResponse.prototype, "errors", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => user_entity_1.User, { nullable: true }),
+    __metadata("design:type", user_entity_1.User)
+], UserResponse.prototype, "user", void 0);
+UserResponse = __decorate([
+    (0, type_graphql_1.ObjectType)()
+], UserResponse);
 let UserResolver = class UserResolver {
     async register(input, { em }) {
         try {
@@ -47,14 +73,21 @@ let UserResolver = class UserResolver {
                 .getRepository(user_entity_1.User)
                 .findOneOrFail({ email: input.email });
             if (!user)
-                return null;
-            const valid = await argon2_1.default.verify(user.password, input.password);
-            if (valid)
-                return user;
+                return {
+                    errors: [{ field: "email", message: "User does not exist" }],
+                };
+            const isValid = await argon2_1.default.verify(user.password, input.password);
+            if (!isValid)
+                return {
+                    errors: [{ field: "email", message: "Incorrect password" }],
+                };
+            return { user };
         }
         catch (err) {
-            console.error("🚨", err);
-            return null;
+            console.error("🚨", err.message);
+            return {
+                errors: [{ field: "email", message: err.message }],
+            };
         }
     }
 };
@@ -67,7 +100,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "register", null);
 __decorate([
-    (0, type_graphql_1.Mutation)(() => user_entity_1.User),
+    (0, type_graphql_1.Mutation)(() => UserResponse),
     __param(0, (0, type_graphql_1.Arg)("input")),
     __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
