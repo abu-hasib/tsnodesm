@@ -1,4 +1,5 @@
 // console.log("Hellop@!");
+import "reflect-metadata";
 import { MikroORM } from "@mikro-orm/core";
 import { ApolloServer } from "apollo-server-express";
 // import { Book } from "./entities/book.entity";
@@ -7,9 +8,12 @@ import { buildSchema } from "type-graphql";
 import config from "./mikro-orm.config";
 import { BookResolver } from "./resolvers/book.resolver";
 import http from "http";
+import { PostResolver } from "./resolvers/post.resolver";
+import { UserResolver } from "./resolvers/user.resolver";
 
 async function main() {
   try {
+    console.log("%%: ", process.env.NODE_ENV);
     const app = express();
     const httpServer = http.createServer(app);
     const orm = await MikroORM.init(config);
@@ -20,7 +24,10 @@ async function main() {
     }
 
     const server = new ApolloServer({
-      schema: await buildSchema({ resolvers: [BookResolver] }),
+      schema: await buildSchema({
+        resolvers: [BookResolver, PostResolver, UserResolver],
+      }),
+      context: orm,
     });
 
     await server.start();
@@ -34,7 +41,7 @@ async function main() {
       `🚀 Server ready at http://localhost:4000${server.graphqlPath}`
     );
 
-    // const book = new Book();
+    // const book = new Book();n
     // book.name = "Bisi Adeyanju";
     // const book1 = new Book();
     // const book2 = new Book();

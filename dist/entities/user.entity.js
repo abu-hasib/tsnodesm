@@ -8,36 +8,51 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Book = void 0;
+exports.User = void 0;
 const core_1 = require("@mikro-orm/core");
+const user_validator_1 = __importDefault(require("../contracts/validators/user.validator"));
 const type_graphql_1 = require("type-graphql");
-let Book = class Book {
-    constructor() {
+const class_validator_1 = require("class-validator");
+let User = class User {
+    constructor(body) {
         this.createdAt = new Date();
         this.updatedAt = new Date();
+        this.email = body.email;
+        this.password = body.password;
     }
 };
 __decorate([
+    (0, type_graphql_1.Field)(),
     (0, core_1.PrimaryKey)(),
     __metadata("design:type", Number)
-], Book.prototype, "id", void 0);
+], User.prototype, "id", void 0);
 __decorate([
     (0, core_1.Property)(),
     __metadata("design:type", Date)
-], Book.prototype, "createdAt", void 0);
+], User.prototype, "createdAt", void 0);
 __decorate([
     (0, core_1.Property)({ onUpdate: () => new Date() }),
     __metadata("design:type", Date)
-], Book.prototype, "updatedAt", void 0);
+], User.prototype, "updatedAt", void 0);
 __decorate([
     (0, type_graphql_1.Field)(),
+    (0, core_1.Unique)(),
+    (0, class_validator_1.IsEmail)(),
     (0, core_1.Property)(),
     __metadata("design:type", String)
-], Book.prototype, "name", void 0);
-Book = __decorate([
+], User.prototype, "email", void 0);
+__decorate([
+    (0, core_1.Property)(),
+    __metadata("design:type", String)
+], User.prototype, "password", void 0);
+User = __decorate([
     (0, type_graphql_1.ObjectType)(),
-    (0, core_1.Entity)()
-], Book);
-exports.Book = Book;
-//# sourceMappingURL=book.entity.js.map
+    (0, core_1.Entity)(),
+    __metadata("design:paramtypes", [user_validator_1.default])
+], User);
+exports.User = User;
+//# sourceMappingURL=user.entity.js.map

@@ -15,6 +15,9 @@ let BookResolver = class BookResolver {
     hello() {
         return "Hello World 1";
     }
+    hello2() {
+        return "Hello World 2";
+    }
 };
 __decorate([
     (0, type_graphql_1.Query)(() => String),
@@ -22,6 +25,12 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], BookResolver.prototype, "hello", null);
+__decorate([
+    (0, type_graphql_1.Query)(() => String),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], BookResolver.prototype, "hello2", null);
 BookResolver = __decorate([
     (0, type_graphql_1.Resolver)()
 ], BookResolver);
