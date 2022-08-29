@@ -5,6 +5,11 @@ import { ApolloServer } from "apollo-server-express";
 // import { Book } from "./entities/book.entity";
 import express from "express";
 import { buildSchema } from "type-graphql";
+import session from "express-session";
+// let RedisStore = require("connect-redis")(session);
+// import { createClient } from "redis";
+// let redisClient = createClient();
+
 import config from "./mikro-orm.config";
 import { BookResolver } from "./resolvers/book.resolver";
 import http from "http";
@@ -27,10 +32,25 @@ async function main() {
       schema: await buildSchema({
         resolvers: [BookResolver, PostResolver, UserResolver],
       }),
-      context: orm,
+      context: ({ req, res }) => ({
+        em: orm.em,
+        req,
+        res,
+      }),
     });
 
     await server.start();
+
+    app.use(
+      session({
+        name: "sid",
+        // store: new RedisStore({ client: redisClient }),
+        saveUninitialized: false,
+        secret: "hjfsjlfnwjf",
+        resave: false,
+        cookie: { maxAge: 60 * 60 * 60, sameSite: "lax" },
+      })
+    );
 
     server.applyMiddleware({ app });
 

@@ -8,6 +8,7 @@ const core_1 = require("@mikro-orm/core");
 const apollo_server_express_1 = require("apollo-server-express");
 const express_1 = __importDefault(require("express"));
 const type_graphql_1 = require("type-graphql");
+const express_session_1 = __importDefault(require("express-session"));
 const mikro_orm_config_1 = __importDefault(require("./mikro-orm.config"));
 const book_resolver_1 = require("./resolvers/book.resolver");
 const http_1 = __importDefault(require("http"));
@@ -28,9 +29,20 @@ async function main() {
             schema: await (0, type_graphql_1.buildSchema)({
                 resolvers: [book_resolver_1.BookResolver, post_resolver_1.PostResolver, user_resolver_1.UserResolver],
             }),
-            context: orm,
+            context: ({ req, res }) => ({
+                em: orm.em,
+                req,
+                res,
+            }),
         });
         await server.start();
+        app.use((0, express_session_1.default)({
+            name: "sid",
+            saveUninitialized: false,
+            secret: "hjfsjlfnwjf",
+            resave: false,
+            cookie: { maxAge: 60 * 60 * 60, sameSite: "lax" },
+        }));
         server.applyMiddleware({ app });
         await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
         console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);

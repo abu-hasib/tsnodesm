@@ -3,7 +3,12 @@ import { MyContext } from "src/utils/interfaces/context.interface";
 import { User } from "../entities/user.entity";
 import argon2 from "argon2";
 import UserValidator from "../contracts/validators/user.validator";
-import { validate } from "class-validator";
+
+declare module "express-session" {
+  interface SessionData {
+    userId: number;
+  }
+}
 
 @ObjectType()
 class FieldError {
@@ -30,16 +35,9 @@ export class UserResolver {
     @Ctx() { em }: MyContext
   ): Promise<UserResponse> {
     try {
-      console.assert(input.email.includes(".com"));
-      console.log("runing...");
       input.password = await argon2.hash(input.password);
       const newUser = new User(input);
-      validate(newUser).then((errors) => {
-        console.log("Class-Validator@@@:", errors);
-        console.error("🚨", errors);
-        if (errors.length > 0) console.error("🚨", errors);
-      });
-      console.log("?newUSwee", newUser);
+      console.log("?newUser", newUser);
       await em.persist(newUser).flush();
       return { user: newUser };
     } catch (err) {
@@ -68,7 +66,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   public async login(
     @Arg("input") input: UserValidator,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     try {
       const user = await em
@@ -83,6 +81,9 @@ export class UserResolver {
         return {
           errors: [{ field: "email", message: "Incorrect password" }],
         };
+      req.session.userId = user.id;
+      console.log("$$$: ", req.session);
+
       return { user };
     } catch (err) {
       console.error("🚨", err.message);
