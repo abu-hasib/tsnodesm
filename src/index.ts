@@ -13,6 +13,7 @@ import { UserResolver } from "./resolvers/user.resolver";
 
 async function main() {
   try {
+    console.log("%%: ", process.env.NODE_ENV);
     const app = express();
     const httpServer = http.createServer(app);
     const orm = await MikroORM.init(config);

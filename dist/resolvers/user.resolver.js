@@ -50,21 +50,40 @@ UserResponse = __decorate([
 let UserResolver = class UserResolver {
     async register(input, { em }) {
         try {
+            console.assert(input.email.includes(".com"));
             console.log("runing...");
             input.password = await argon2_1.default.hash(input.password);
             const newUser = new user_entity_1.User(input);
             (0, class_validator_1.validate)(newUser).then((errors) => {
                 console.log("Class-Validator@@@:", errors);
+                console.error("🚨", errors);
                 if (errors.length > 0)
                     console.error("🚨", errors);
             });
             console.log("?newUSwee", newUser);
             await em.persist(newUser).flush();
-            return newUser;
+            return { user: newUser };
         }
         catch (err) {
-            console.error(err);
-            return null;
+            if (err.detail.includes("already exists")) {
+                console.error("🆑", err.detail);
+                return {
+                    errors: [
+                        {
+                            field: "email",
+                            message: "Email already exists",
+                        },
+                    ],
+                };
+            }
+            return {
+                errors: [
+                    {
+                        field: "email",
+                        message: "Email already exists",
+                    },
+                ],
+            };
         }
     }
     async login(input, { em }) {
@@ -92,8 +111,8 @@ let UserResolver = class UserResolver {
     }
 };
 __decorate([
-    (0, type_graphql_1.Mutation)(() => user_entity_1.User),
-    __param(0, (0, type_graphql_1.Arg)("input")),
+    (0, type_graphql_1.Mutation)(() => UserResponse),
+    __param(0, (0, type_graphql_1.Arg)("input", { validate: true })),
     __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [user_validator_1.default, Object]),

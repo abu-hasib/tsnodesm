@@ -24,25 +24,44 @@ class UserResponse {
 
 @Resolver(() => User)
 export class UserResolver {
-  @Mutation(() => User)
+  @Mutation(() => UserResponse)
   public async register(
-    @Arg("input") input: UserValidator,
+    @Arg("input", { validate: true }) input: UserValidator,
     @Ctx() { em }: MyContext
-  ): Promise<User | null> {
+  ): Promise<UserResponse> {
     try {
+      console.assert(input.email.includes(".com"));
       console.log("runing...");
       input.password = await argon2.hash(input.password);
       const newUser = new User(input);
       validate(newUser).then((errors) => {
         console.log("Class-Validator@@@:", errors);
+        console.error("🚨", errors);
         if (errors.length > 0) console.error("🚨", errors);
       });
       console.log("?newUSwee", newUser);
       await em.persist(newUser).flush();
-      return newUser;
+      return { user: newUser };
     } catch (err) {
-      console.error(err);
-      return null;
+      if (err.detail.includes("already exists")) {
+        console.error("🆑", err.detail);
+        return {
+          errors: [
+            {
+              field: "email",
+              message: "Email already exists",
+            },
+          ],
+        };
+      }
+      return {
+        errors: [
+          {
+            field: "email",
+            message: "Email already exists",
+          },
+        ],
+      };
     }
   }
 

@@ -12,6 +12,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const class_validator_1 = require("class-validator");
 const type_graphql_1 = require("type-graphql");
 let UserValidator = class UserValidator {
+    static errors() {
+        console.log("Am static.....");
+    }
 };
 __decorate([
     (0, type_graphql_1.Field)(),

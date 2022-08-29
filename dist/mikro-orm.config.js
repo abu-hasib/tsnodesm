@@ -10,13 +10,13 @@ exports.default = {
         tableName: "migrations",
         transactional: true,
     },
-    user: "postgres",
-    password: "test",
+    user: process.env.MIKROORM_USERNAME,
+    password: process.env.MIKROORM_PASSWORD,
     dbName: "postgres",
     type: "postgresql",
     debug: true,
-    host: "localhost",
-    port: 5432,
+    host: process.env.MIKROORM_HOST,
+    port: process.env.MIKROORM_PORT,
     allowGlobalContext: true,
 };
 //# sourceMappingURL=mikro-orm.config.js.map
