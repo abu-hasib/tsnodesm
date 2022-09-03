@@ -30,21 +30,13 @@ class UserResponse {
 
 @Resolver(() => User)
 export class UserResolver {
-  @Query(() => UserResponse)
-  public async me(@Ctx() { em, req }: MyContext): Promise<UserResponse> {
-    try {
-      console.log("###: ", req.session);
-      const me = await em
-        .getRepository(User)
-        .findOneOrFail({ id: req.session.userId });
-      return {
-        user: me,
-      };
-    } catch (error) {
-      return {
-        errors: [{ field: "email", message: error.message }],
-      };
-    }
+  @Query(() => User, { nullable: true })
+  public async me(@Ctx() { em, req }: MyContext) {
+    if (!req.session.userId) return null;
+    const me = await em
+      .getRepository(User)
+      .findOneOrFail({ id: req.session.userId });
+    return me;
   }
   @Mutation(() => UserResponse)
   public async register(
