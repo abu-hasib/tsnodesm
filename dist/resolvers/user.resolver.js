@@ -47,6 +47,22 @@ UserResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], UserResponse);
 let UserResolver = class UserResolver {
+    async me({ em, req }) {
+        try {
+            console.log("###: ", req.session);
+            const me = await em
+                .getRepository(user_entity_1.User)
+                .findOneOrFail({ id: req.session.userId });
+            return {
+                user: me,
+            };
+        }
+        catch (error) {
+            return {
+                errors: [{ field: "email", message: error.message }],
+            };
+        }
+    }
     async register(input, { em }) {
         try {
             input.password = await argon2_1.default.hash(input.password);
@@ -103,6 +119,13 @@ let UserResolver = class UserResolver {
         }
     }
 };
+__decorate([
+    (0, type_graphql_1.Query)(() => UserResponse),
+    __param(0, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "me", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => UserResponse),
     __param(0, (0, type_graphql_1.Arg)("input", { validate: true })),

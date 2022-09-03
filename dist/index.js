@@ -8,15 +8,16 @@ const core_1 = require("@mikro-orm/core");
 const apollo_server_express_1 = require("apollo-server-express");
 const express_1 = __importDefault(require("express"));
 const type_graphql_1 = require("type-graphql");
-const express_session_1 = __importDefault(require("express-session"));
 const mikro_orm_config_1 = __importDefault(require("./mikro-orm.config"));
 const book_resolver_1 = require("./resolvers/book.resolver");
 const http_1 = __importDefault(require("http"));
 const post_resolver_1 = require("./resolvers/post.resolver");
 const user_resolver_1 = require("./resolvers/user.resolver");
+const apollo_server_core_1 = require("apollo-server-core");
+const session = require("express-session");
+let RedisStore = require("connect-redis")(session);
 async function main() {
     try {
-        console.log("%%: ", process.env.NODE_ENV);
         const app = (0, express_1.default)();
         const httpServer = http_1.default.createServer(app);
         const orm = await core_1.MikroORM.init(mikro_orm_config_1.default);
@@ -25,6 +26,22 @@ async function main() {
         if (migrations && migrations.length > 0) {
             await migrator.up();
         }
+        const { createClient } = require("redis");
+        let redisClient = createClient({ legacyMode: true });
+        redisClient.connect().catch(console.error);
+        redisClient.on("error", console.error);
+        app.use(session({
+            name: "sid",
+            store: new RedisStore({ client: redisClient, disableTouch: true }),
+            cookie: {
+                maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
+                httpOnly: true,
+                sameSite: "lax",
+            },
+            saveUninitialized: false,
+            secret: "lkjhgfdsa",
+            resave: false,
+        }));
         const server = new apollo_server_express_1.ApolloServer({
             schema: await (0, type_graphql_1.buildSchema)({
                 resolvers: [book_resolver_1.BookResolver, post_resolver_1.PostResolver, user_resolver_1.UserResolver],
@@ -34,15 +51,9 @@ async function main() {
                 req,
                 res,
             }),
+            plugins: [(0, apollo_server_core_1.ApolloServerPluginLandingPageGraphQLPlayground)({})],
         });
         await server.start();
-        app.use((0, express_session_1.default)({
-            name: "sid",
-            saveUninitialized: false,
-            secret: "hjfsjlfnwjf",
-            resave: false,
-            cookie: { maxAge: 60 * 60 * 60, sameSite: "lax" },
-        }));
         server.applyMiddleware({ app });
         await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
         console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
