@@ -20,7 +20,6 @@ const type_graphql_1 = require("type-graphql");
 const user_entity_1 = require("../entities/user.entity");
 const argon2_1 = __importDefault(require("argon2"));
 const user_validator_1 = __importDefault(require("../contracts/validators/user.validator"));
-const class_validator_1 = require("class-validator");
 let FieldError = class FieldError {
 };
 __decorate([
@@ -48,19 +47,27 @@ UserResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], UserResponse);
 let UserResolver = class UserResolver {
+    async me({ em, req }) {
+        try {
+            console.log("###: ", req.session);
+            const me = await em
+                .getRepository(user_entity_1.User)
+                .findOneOrFail({ id: req.session.userId });
+            return {
+                user: me,
+            };
+        }
+        catch (error) {
+            return {
+                errors: [{ field: "email", message: error.message }],
+            };
+        }
+    }
     async register(input, { em }) {
         try {
-            console.assert(input.email.includes(".com"));
-            console.log("runing...");
             input.password = await argon2_1.default.hash(input.password);
             const newUser = new user_entity_1.User(input);
-            (0, class_validator_1.validate)(newUser).then((errors) => {
-                console.log("Class-Validator@@@:", errors);
-                console.error("🚨", errors);
-                if (errors.length > 0)
-                    console.error("🚨", errors);
-            });
-            console.log("?newUSwee", newUser);
+            console.log("?newUser", newUser);
             await em.persist(newUser).flush();
             return { user: newUser };
         }
@@ -86,7 +93,7 @@ let UserResolver = class UserResolver {
             };
         }
     }
-    async login(input, { em }) {
+    async login(input, { em, req }) {
         try {
             const user = await em
                 .getRepository(user_entity_1.User)
@@ -100,6 +107,8 @@ let UserResolver = class UserResolver {
                 return {
                     errors: [{ field: "email", message: "Incorrect password" }],
                 };
+            req.session.userId = user.id;
+            console.log("$$$: ", req.session);
             return { user };
         }
         catch (err) {
@@ -110,6 +119,13 @@ let UserResolver = class UserResolver {
         }
     }
 };
+__decorate([
+    (0, type_graphql_1.Query)(() => UserResponse),
+    __param(0, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "me", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => UserResponse),
     __param(0, (0, type_graphql_1.Arg)("input", { validate: true })),

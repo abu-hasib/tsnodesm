@@ -5,15 +5,18 @@ import { ApolloServer } from "apollo-server-express";
 // import { Book } from "./entities/book.entity";
 import express from "express";
 import { buildSchema } from "type-graphql";
+
 import config from "./mikro-orm.config";
 import { BookResolver } from "./resolvers/book.resolver";
 import http from "http";
 import { PostResolver } from "./resolvers/post.resolver";
 import { UserResolver } from "./resolvers/user.resolver";
+import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
+const session = require("express-session");
+let RedisStore = require("connect-redis")(session);
 
 async function main() {
   try {
-    console.log("%%: ", process.env.NODE_ENV);
     const app = express();
     const httpServer = http.createServer(app);
     const orm = await MikroORM.init(config);
@@ -23,11 +26,37 @@ async function main() {
       await migrator.up();
     }
 
+    // redis@v4
+    const { createClient } = require("redis");
+    let redisClient = createClient({ legacyMode: true });
+    redisClient.connect().catch(console.error);
+    redisClient.on("error", console.error);
+
+    app.use(
+      session({
+        name: "sid",
+        store: new RedisStore({ client: redisClient, disableTouch: true }),
+        cookie: {
+          maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
+          httpOnly: true,
+          sameSite: "lax",
+        },
+        saveUninitialized: false,
+        secret: "lkjhgfdsa",
+        resave: false,
+      })
+    );
+
     const server = new ApolloServer({
       schema: await buildSchema({
         resolvers: [BookResolver, PostResolver, UserResolver],
       }),
-      context: orm,
+      context: ({ req, res }) => ({
+        em: orm.em,
+        req,
+        res,
+      }),
+      plugins: [ApolloServerPluginLandingPageGraphQLPlayground({})],
     });
 
     await server.start();
