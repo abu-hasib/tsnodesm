@@ -3,10 +3,14 @@ import { useRouter } from "next/router";
 import { stringify } from "querystring";
 import { useMutation, useQuery } from "urql";
 import InputField from "../components/InputField";
-import { FieldError, useRegisterMutation } from "../src/generated/graphql";
+import {
+  FieldError,
+  useLoginMutation,
+  useRegisterMutation,
+} from "../src/generated/graphql";
 import { toErrorMap } from "../src/helpers/toErrorMap";
 
-interface RegisterProps {}
+interface LoginProps {}
 
 const query = `query Hello {
   hello 
@@ -22,8 +26,8 @@ const styles = {
   screen: "min-h-screen bg-rose-100 flex justify-center items-center",
 };
 
-const Register: React.FC<RegisterProps> = (props) => {
-  const [, register] = useRegisterMutation();
+const Login: React.FC<LoginProps> = (props) => {
+  const [, login] = useLoginMutation();
   const router = useRouter();
 
   return (
@@ -38,9 +42,10 @@ const Register: React.FC<RegisterProps> = (props) => {
               <Formik
                 initialValues={{ email: "", password: "" }}
                 onSubmit={async (values, { setSubmitting, setErrors }) => {
-                  const response = await register({ input: values });
-                  if (response.data?.register.errors) {
-                    setErrors(toErrorMap(response.data.register.errors));
+                  const response = await login({ input: values });
+                  if (response.data?.login.errors) {
+                    console.log("%%: ", response.data.login.errors);
+                    setErrors(toErrorMap(response.data.login.errors));
                     setSubmitting(false);
                   } else {
                     router.push("/");
@@ -69,7 +74,7 @@ const Register: React.FC<RegisterProps> = (props) => {
                     </div>
                     <input
                       type="submit"
-                      value={isSubmitting ? "Loading" : "Register"}
+                      value={isSubmitting ? "Loading" : "Login"}
                       disabled={isSubmitting}
                       className={styles.button}
                     />
@@ -84,4 +89,4 @@ const Register: React.FC<RegisterProps> = (props) => {
   );
 };
 
-export default Register;
+export default Login;

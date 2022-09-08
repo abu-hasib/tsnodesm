@@ -2,6 +2,7 @@ import {
   Arg,
   Ctx,
   Field,
+  InputType,
   Mutation,
   ObjectType,
   Query,
@@ -10,7 +11,17 @@ import {
 import { MyContext } from "src/utils/interfaces/context.interface";
 import { User } from "../entities/user.entity";
 import argon2 from "argon2";
-import UserValidator from "../contracts/validators/user.validator";
+import { validate } from "class-validator";
+import { formatContraints } from "../helpers/formatConstraints";
+
+@InputType()
+class UserValidate {
+  @Field()
+  public email: string;
+
+  @Field()
+  password: string;
+}
 @ObjectType()
 class FieldError {
   @Field()
@@ -40,14 +51,28 @@ export class UserResolver {
   }
   @Mutation(() => UserResponse)
   public async register(
-    @Arg("input", { validate: true }) input: UserValidator,
-    @Ctx() { em }: MyContext
+    @Arg("input") input: UserValidate,
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     try {
-      input.password = await argon2.hash(input.password);
       const newUser = new User(input);
-      console.log("?newUser", newUser);
-      await em.persist(newUser).flush();
+      const validateResult = await validate(newUser);
+      input.password = await argon2.hash(input.password);
+      if (validateResult.length > 0) {
+        const validationErrors = validateResult.map((error) => {
+          return {
+            field: error.property,
+            message: formatContraints(error),
+          };
+        });
+
+        return {
+          errors: validationErrors,
+        };
+      } else {
+        await em.persist(newUser).flush();
+        req.session.userId = newUser.id;
+      }
       return { user: newUser };
     } catch (err) {
       if (err.detail.includes("already exists")) {
@@ -74,7 +99,7 @@ export class UserResolver {
 
   @Mutation(() => UserResponse)
   public async login(
-    @Arg("input") input: UserValidator,
+    @Arg("input") input: UserValidate,
     @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     try {
@@ -88,17 +113,13 @@ export class UserResolver {
       const isValid = await argon2.verify(user.password, input.password);
       if (!isValid)
         return {
-          errors: [{ field: "email", message: "Incorrect password" }],
+          errors: [{ field: "password", message: "Incorrect password" }],
         };
-      // req.session. = user.id;
       req.session.userId = user.id;
-      console.log("$$$: ", req.session);
-
       return { user };
     } catch (err) {
-      console.error("🚨", err.message);
       return {
-        errors: [{ field: "email", message: err.message }],
+        errors: [{ field: "email", message: "User not found" }],
       };
     }
   }

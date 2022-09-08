@@ -42,11 +42,15 @@ __decorate([
     (0, type_graphql_1.Field)(),
     (0, core_1.Unique)(),
     (0, class_validator_1.IsEmail)(),
+    (0, class_validator_1.IsNotEmpty)(),
     (0, core_1.Property)(),
     __metadata("design:type", String)
 ], User.prototype, "email", void 0);
 __decorate([
     (0, core_1.Property)(),
+    (0, class_validator_1.MinLength)(3, {
+        message: "Password is too short",
+    }),
     __metadata("design:type", String)
 ], User.prototype, "password", void 0);
 User = __decorate([

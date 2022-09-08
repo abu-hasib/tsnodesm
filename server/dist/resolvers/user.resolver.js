@@ -19,7 +19,21 @@ exports.UserResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 const user_entity_1 = require("../entities/user.entity");
 const argon2_1 = __importDefault(require("argon2"));
-const user_validator_1 = __importDefault(require("../contracts/validators/user.validator"));
+const class_validator_1 = require("class-validator");
+const formatConstraints_1 = require("../helpers/formatConstraints");
+let UserValidate = class UserValidate {
+};
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", String)
+], UserValidate.prototype, "email", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", String)
+], UserValidate.prototype, "password", void 0);
+UserValidate = __decorate([
+    (0, type_graphql_1.InputType)()
+], UserValidate);
 let FieldError = class FieldError {
 };
 __decorate([
@@ -55,12 +69,26 @@ let UserResolver = class UserResolver {
             .findOneOrFail({ id: req.session.userId });
         return me;
     }
-    async register(input, { em }) {
+    async register(input, { em, req }) {
         try {
-            input.password = await argon2_1.default.hash(input.password);
             const newUser = new user_entity_1.User(input);
-            console.log("?newUser", newUser);
-            await em.persist(newUser).flush();
+            const validateResult = await (0, class_validator_1.validate)(newUser);
+            input.password = await argon2_1.default.hash(input.password);
+            if (validateResult.length > 0) {
+                const validationErrors = validateResult.map((error) => {
+                    return {
+                        field: error.property,
+                        message: (0, formatConstraints_1.formatContraints)(error),
+                    };
+                });
+                return {
+                    errors: validationErrors,
+                };
+            }
+            else {
+                await em.persist(newUser).flush();
+                req.session.userId = newUser.id;
+            }
             return { user: newUser };
         }
         catch (err) {
@@ -97,16 +125,14 @@ let UserResolver = class UserResolver {
             const isValid = await argon2_1.default.verify(user.password, input.password);
             if (!isValid)
                 return {
-                    errors: [{ field: "email", message: "Incorrect password" }],
+                    errors: [{ field: "password", message: "Incorrect password" }],
                 };
             req.session.userId = user.id;
-            console.log("$$$: ", req.session);
             return { user };
         }
         catch (err) {
-            console.error("🚨", err.message);
             return {
-                errors: [{ field: "email", message: err.message }],
+                errors: [{ field: "email", message: "User not found" }],
             };
         }
     }
@@ -120,10 +146,10 @@ __decorate([
 ], UserResolver.prototype, "me", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => UserResponse),
-    __param(0, (0, type_graphql_1.Arg)("input", { validate: true })),
+    __param(0, (0, type_graphql_1.Arg)("input")),
     __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [user_validator_1.default, Object]),
+    __metadata("design:paramtypes", [UserValidate, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "register", null);
 __decorate([
@@ -131,7 +157,7 @@ __decorate([
     __param(0, (0, type_graphql_1.Arg)("input")),
     __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [user_validator_1.default, Object]),
+    __metadata("design:paramtypes", [UserValidate, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "login", null);
 UserResolver = __decorate([

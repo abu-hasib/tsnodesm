@@ -42,7 +42,7 @@ export type MutationDeletePostArgs = {
 
 
 export type MutationLoginArgs = {
-  input: UserValidator;
+  input: UserValidate;
 };
 
 
@@ -87,10 +87,12 @@ export type UserValidate = {
   password: Scalars['String'];
 };
 
-export type UserValidator = {
-  email: Scalars['String'];
-  password: Scalars['String'];
-};
+export type LoginMutationVariables = Exact<{
+  input: UserValidate;
+}>;
+
+
+export type LoginMutation = { __typename?: 'Mutation', login: { __typename?: 'UserResponse', errors?: Array<{ __typename?: 'FieldError', field: string, message: string }> | null, user?: { __typename?: 'User', id: number, email: string } | null } };
 
 export type RegisterMutationVariables = Exact<{
   input: UserValidate;
@@ -100,6 +102,24 @@ export type RegisterMutationVariables = Exact<{
 export type RegisterMutation = { __typename?: 'Mutation', register: { __typename?: 'UserResponse', errors?: Array<{ __typename?: 'FieldError', field: string, message: string }> | null, user?: { __typename?: 'User', email: string, id: number } | null } };
 
 
+export const LoginDocument = gql`
+    mutation Login($input: UserValidate!) {
+  login(input: $input) {
+    errors {
+      field
+      message
+    }
+    user {
+      id
+      email
+    }
+  }
+}
+    `;
+
+export function useLoginMutation() {
+  return Urql.useMutation<LoginMutation, LoginMutationVariables>(LoginDocument);
+};
 export const RegisterDocument = gql`
     mutation Register($input: UserValidate!) {
   register(input: $input) {
