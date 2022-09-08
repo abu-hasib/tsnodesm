@@ -1,0 +1,12 @@
+mutation Register($input: UserValidate!) {
+  register(input: $input) {
+    errors {
+      field
+      message
+    }
+    user {
+      email
+      id
+    }
+  }
+}
