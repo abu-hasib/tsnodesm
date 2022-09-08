@@ -1,7 +1,7 @@
 import { Entity, PrimaryKey, Property, Unique } from "@mikro-orm/core";
 import UserValidator from "../contracts/validators/user.validator";
 import { Field, ObjectType } from "type-graphql";
-import { IsEmail } from "class-validator";
+import { IsEmail, IsNotEmpty, MinLength } from "class-validator";
 
 @ObjectType()
 @Entity()
@@ -19,10 +19,14 @@ export class User {
   @Field()
   @Unique()
   @IsEmail()
+  @IsNotEmpty()
   @Property()
   email: string;
 
   @Property()
+  @MinLength(3, {
+    message: "Password is too short",
+  })
   password: string;
 
   constructor(body: UserValidator) {

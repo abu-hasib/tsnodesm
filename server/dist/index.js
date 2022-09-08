@@ -16,6 +16,7 @@ const user_resolver_1 = require("./resolvers/user.resolver");
 const apollo_server_core_1 = require("apollo-server-core");
 const session = require("express-session");
 let RedisStore = require("connect-redis")(session);
+const cors_1 = __importDefault(require("cors"));
 async function main() {
     try {
         const app = (0, express_1.default)();
@@ -30,6 +31,10 @@ async function main() {
         let redisClient = createClient({ legacyMode: true });
         redisClient.connect().catch(console.error);
         redisClient.on("error", console.error);
+        app.use((0, cors_1.default)({
+            origin: "http://localhost:3000",
+            credentials: true,
+        }));
         app.use(session({
             name: "sid",
             store: new RedisStore({ client: redisClient, disableTouch: true }),
@@ -54,7 +59,7 @@ async function main() {
             plugins: [(0, apollo_server_core_1.ApolloServerPluginLandingPageGraphQLPlayground)({})],
         });
         await server.start();
-        server.applyMiddleware({ app });
+        server.applyMiddleware({ app, cors: false });
         await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
         console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
     }
