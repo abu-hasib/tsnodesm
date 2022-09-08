@@ -48,20 +48,12 @@ UserResponse = __decorate([
 ], UserResponse);
 let UserResolver = class UserResolver {
     async me({ em, req }) {
-        try {
-            console.log("###: ", req.session);
-            const me = await em
-                .getRepository(user_entity_1.User)
-                .findOneOrFail({ id: req.session.userId });
-            return {
-                user: me,
-            };
-        }
-        catch (error) {
-            return {
-                errors: [{ field: "email", message: error.message }],
-            };
-        }
+        if (!req.session.userId)
+            return null;
+        const me = await em
+            .getRepository(user_entity_1.User)
+            .findOneOrFail({ id: req.session.userId });
+        return me;
     }
     async register(input, { em }) {
         try {
@@ -120,7 +112,7 @@ let UserResolver = class UserResolver {
     }
 };
 __decorate([
-    (0, type_graphql_1.Query)(() => UserResponse),
+    (0, type_graphql_1.Query)(() => user_entity_1.User, { nullable: true }),
     __param(0, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
