@@ -5,8 +5,7 @@ mutation Register($input: UserValidate!) {
       message
     }
     user {
-      email
-      id
+      ...UserFrag
     }
   }
 }
