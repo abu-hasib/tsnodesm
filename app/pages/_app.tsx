@@ -17,6 +17,7 @@ import {
   LoginMutation,
   RegisterMutation,
   MeQuery,
+  LogoutMutation,
 } from "../src/generated/graphql";
 
 function typedUpdateQuery<Result, Query>(
@@ -67,6 +68,16 @@ const client = createClient({
                     me: result.register.user,
                   };
                 }
+              }
+            );
+          },
+          logout: (_result, args, cache, info) => {
+            typedUpdateQuery<LogoutMutation, MeQuery>(
+              cache,
+              { query: MeDocument },
+              _result,
+              () => {
+                return { me: null };
               }
             );
           },
