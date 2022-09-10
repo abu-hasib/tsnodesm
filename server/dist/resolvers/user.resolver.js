@@ -136,6 +136,18 @@ let UserResolver = class UserResolver {
             };
         }
     }
+    async logout({ req, res }) {
+        return new Promise((resolve) => {
+            req.session.destroy((err) => {
+                res.clearCookie("sid");
+                if (err) {
+                    resolve(false);
+                    return;
+                }
+                resolve(true);
+            });
+        });
+    }
 };
 __decorate([
     (0, type_graphql_1.Query)(() => user_entity_1.User, { nullable: true }),
@@ -160,6 +172,13 @@ __decorate([
     __metadata("design:paramtypes", [UserValidate, Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "login", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    __param(0, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "logout", null);
 UserResolver = __decorate([
     (0, type_graphql_1.Resolver)(() => user_entity_1.User)
 ], UserResolver);
