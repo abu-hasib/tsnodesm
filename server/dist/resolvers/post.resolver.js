@@ -22,7 +22,7 @@ let PostResolver = class PostResolver {
     async addPost(title, ctx) {
         const post = new post_entity_1.Post();
         post.title = title;
-        ctx.em.persist(post).flush();
+        await ctx.em.persist(post).flush();
         return post;
     }
     async updatePost(id, title, { em }) {

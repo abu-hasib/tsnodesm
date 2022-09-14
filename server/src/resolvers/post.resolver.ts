@@ -12,7 +12,7 @@ export class PostResolver {
   public async addPost(@Arg("title") title: string, @Ctx() ctx: MyContext) {
     const post = new Post();
     post.title = title;
-    ctx.em.persist(post).flush();
+    await ctx.em.persist(post).flush();
     return post;
   }
   @Mutation(() => Post, { nullable: true })
