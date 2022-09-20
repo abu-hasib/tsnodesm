@@ -1,7 +1,7 @@
 import { IsEmail, IsString } from "class-validator";
 import { Field, InputType } from "type-graphql";
 @InputType()
-class UserValidator {
+export class UserValidator {
   static errors() {
     console.log("Am static.....");
   }
@@ -13,6 +13,20 @@ class UserValidator {
   @Field()
   @IsString()
   password: string;
+
+  @Field()
+  @IsString()
+  username: string;
 }
 
-export default UserValidator;
+@InputType()
+export class UserValidate {
+  @Field()
+  public email: string;
+
+  @Field()
+  public username: string;
+
+  @Field()
+  password: string;
+}

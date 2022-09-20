@@ -1,10 +1,12 @@
+import { withUrqlClient } from "next-urql";
 import Head from "next/head";
-import Image from "next/image";
-import { AppProps } from "next/app";
-import styles from "../styles/Home.module.css";
 import NavBar from "../components/NavBar";
+import { usePostsQuery } from "../src/generated/graphql";
+import { createUrqlClient } from "../src/utils/createUrqlClient";
+import styles from "../styles/Home.module.css";
 
-export default function Home() {
+function Home() {
+  const [{ data }] = usePostsQuery();
   return (
     <div>
       <Head>
@@ -13,24 +15,21 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <NavBar />
+      <NavBar pageProps />
 
       <main className={styles.main}>
         <h2 className="text-3xl font-bold underline">Hello World!</h2>
-      </main>
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{" "}
-          <span className={styles.logo}>
-            <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-          </span>
-        </a>
-      </footer>
+        <div>
+          {!data ? (
+            <div>load...</div>
+          ) : (
+            data.getPosts.map((post) => <h1 key={post.id}>{post.title}</h1>)
+          )}
+        </div>
+      </main>
     </div>
   );
 }
+
+export default withUrqlClient(createUrqlClient, { ssr: true })(Home);

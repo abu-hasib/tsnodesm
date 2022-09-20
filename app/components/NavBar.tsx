@@ -1,11 +1,22 @@
+import { withUrqlClient } from "next-urql";
 import Link from "next/link";
-import * as React from "react";
+import { useEffect, useState } from "react";
 import { useLogoutMutation, useMeQuery } from "../src/generated/graphql";
+import { createUrqlClient } from "../src/utils/createUrqlClient";
 
-interface NavBarProps {}
-const NavBar: React.FC<NavBarProps> = ({}) => {
-  const [{ data, fetching, error }] = useMeQuery();
+interface NavBarProps {
+  pageProps?: any;
+}
+
+const NavBar: React.FC<NavBarProps> = () => {
+  const [isServer, setIsServer] = useState(false);
   const [{}, logout] = useLogoutMutation();
+  const [{ data, fetching, error }] = useMeQuery();
+  useEffect(() => {
+    console.log("##: ", typeof window === "undefined");
+    setIsServer(typeof window === "undefined"), [];
+  });
+  console.log("$$: ", data);
   let body;
   if (fetching || error) {
   } else if (!data?.me) {
@@ -23,10 +34,10 @@ const NavBar: React.FC<NavBarProps> = ({}) => {
     body = (
       <>
         <li>
-          <span>{data?.me?.email}</span>
+          <span>{data?.me?.username}</span>
         </li>
         <li>
-          <button onClick={() => logout()}>logout</button>
+          <button onClick={() => logout(data.me as never)}>logout</button>
         </li>
       </>
     );
@@ -43,4 +54,4 @@ const NavBar: React.FC<NavBarProps> = ({}) => {
   );
 };
 
-export default NavBar;
+export default withUrqlClient(createUrqlClient)(NavBar);
