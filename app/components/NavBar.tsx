@@ -1,6 +1,5 @@
 import { withUrqlClient } from "next-urql";
 import Link from "next/link";
-import { type } from "os";
 import { useEffect, useState } from "react";
 import { useLogoutMutation, useMeQuery } from "../src/generated/graphql";
 import { createUrqlClient } from "../src/utils/createUrqlClient";
@@ -35,7 +34,7 @@ const NavBar: React.FC<NavBarProps> = () => {
     body = (
       <>
         <li>
-          <span>{data?.me?.email}</span>
+          <span>{data?.me?.username}</span>
         </li>
         <li>
           <button onClick={() => logout(data.me as never)}>logout</button>

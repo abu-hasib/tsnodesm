@@ -1,0 +1,8 @@
+// tsconfig.mikro-orm.json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs", // this line is important
+    "target": "ES6"
+  }
+}

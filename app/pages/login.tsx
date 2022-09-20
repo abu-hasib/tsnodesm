@@ -1,6 +1,7 @@
 import { Formik } from "formik";
 import { withUrqlClient } from "next-urql";
 import Head from "next/head";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import InputField from "../components/InputField";
 import NavBar from "../components/NavBar";
@@ -30,9 +31,12 @@ const Login: React.FC<LoginProps> = ({}) => {
                 Welcome back!
               </h1>
               <Formik
-                initialValues={{ email: "", password: "" }}
+                initialValues={{ login: "", password: "" }}
                 onSubmit={async (values, { setSubmitting, setErrors }) => {
-                  const response = await login({ input: values });
+                  const response = await login({
+                    login: values.login,
+                    password: values.password,
+                  });
                   if (response.data?.login.errors) {
                     setErrors(toErrorMap(response.data.login.errors));
                     setSubmitting(false);
@@ -45,8 +49,8 @@ const Login: React.FC<LoginProps> = ({}) => {
                   <form className="mt-6" onSubmit={handleSubmit}>
                     <div className="relative">
                       <InputField
-                        name="email"
-                        label="Email"
+                        name="login"
+                        label="Email or Username"
                         type="text"
                         className={styles.inputField}
                         placeholder="john@doe.com"
@@ -60,6 +64,9 @@ const Login: React.FC<LoginProps> = ({}) => {
                         className={styles.inputField}
                         placeholder="password"
                       />
+                    </div>
+                    <div className="text-right mt-1">
+                      <Link href="change-password">forgot password?</Link>
                     </div>
                     <input
                       type="submit"

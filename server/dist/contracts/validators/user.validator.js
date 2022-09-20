@@ -9,6 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.UserValidate = exports.UserValidator = void 0;
 const class_validator_1 = require("class-validator");
 const type_graphql_1 = require("type-graphql");
 let UserValidator = class UserValidator {
@@ -26,8 +27,31 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UserValidator.prototype, "password", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UserValidator.prototype, "username", void 0);
 UserValidator = __decorate([
     (0, type_graphql_1.InputType)()
 ], UserValidator);
-exports.default = UserValidator;
+exports.UserValidator = UserValidator;
+let UserValidate = class UserValidate {
+};
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", String)
+], UserValidate.prototype, "email", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", String)
+], UserValidate.prototype, "username", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", String)
+], UserValidate.prototype, "password", void 0);
+UserValidate = __decorate([
+    (0, type_graphql_1.InputType)()
+], UserValidate);
+exports.UserValidate = UserValidate;
 //# sourceMappingURL=user.validator.js.map

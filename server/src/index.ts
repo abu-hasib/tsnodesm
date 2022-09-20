@@ -24,6 +24,7 @@ async function main() {
     const migrator = await orm.getMigrator();
     const migrations = await migrator.getPendingMigrations();
     if (migrations && migrations.length > 0) {
+      console.log("%%: ", migrations.length);
       await migrator.up();
     }
 
@@ -61,6 +62,7 @@ async function main() {
         em: orm.em,
         req,
         res,
+        redis: redisClient,
       }),
       plugins: [ApolloServerPluginLandingPageGraphQLPlayground({})],
     });
