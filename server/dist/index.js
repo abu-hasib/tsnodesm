@@ -17,6 +17,7 @@ const apollo_server_core_1 = require("apollo-server-core");
 const session = require("express-session");
 let RedisStore = require("connect-redis")(session);
 const cors_1 = __importDefault(require("cors"));
+const ioredis_1 = __importDefault(require("ioredis"));
 async function main() {
     try {
         const app = (0, express_1.default)();
@@ -28,10 +29,7 @@ async function main() {
             console.log("%%: ", migrations.length);
             await migrator.up();
         }
-        const { createClient } = require("redis");
-        let redisClient = createClient({ legacyMode: true });
-        redisClient.connect().catch(console.error);
-        redisClient.on("error", console.error);
+        let redisClient = new ioredis_1.default();
         app.use((0, cors_1.default)({
             origin: "http://localhost:3000",
             credentials: true,

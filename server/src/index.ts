@@ -15,6 +15,7 @@ import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-co
 const session = require("express-session");
 let RedisStore = require("connect-redis")(session);
 import cors from "cors";
+import Redis from "ioredis";
 
 async function main() {
   try {
@@ -29,10 +30,14 @@ async function main() {
     }
 
     // redis@v4
-    const { createClient } = require("redis");
-    let redisClient = createClient({ legacyMode: true });
-    redisClient.connect().catch(console.error);
-    redisClient.on("error", console.error);
+    // const { createClient } = require("redis");
+    // let redisClient = createClient({ legacyMode: true });
+    // redisClient.connect().catch(console.error);
+    // redisClient.on("error", console.error);
+
+    // ioredis
+    // const Redis = require("ioredis");
+    let redisClient = new Redis();
     app.use(
       cors({
         origin: "http://localhost:3000",

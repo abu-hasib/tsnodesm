@@ -66,7 +66,7 @@ const Login: React.FC<LoginProps> = ({}) => {
                       />
                     </div>
                     <div className="text-right mt-1">
-                      <Link href="change-password">forgot password?</Link>
+                      <Link href="forgot-password">forgot password?</Link>
                     </div>
                     <input
                       type="submit"

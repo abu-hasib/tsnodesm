@@ -52,10 +52,30 @@ UserResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], UserResponse);
 let UserResolver = class UserResolver {
+    async changePassword({ em, redis }, token, password) {
+        try {
+            const value = await redis.get(constants_1.FORGET_PASSWORD_PREFIX + token);
+            if (value) {
+                const user = await em
+                    .getRepository(user_entity_1.User)
+                    .findOneOrFail({ id: Number(value) });
+                if (user)
+                    user.password = await argon2_1.default.hash(password);
+                await em.persist(user).flush();
+                return true;
+            }
+            return false;
+        }
+        catch (error) {
+            console.log(error);
+            return false;
+        }
+    }
     async forgotPassword({ em, redis }, email) {
         try {
             const user = await em.getRepository(user_entity_1.User).findOneOrFail({ email });
             let token = (0, uuid_1.v4)();
+            console.log("***: ", user.id);
             redis.set(constants_1.FORGET_PASSWORD_PREFIX + token, user.id, "EX", 1000 * 60 * 60 * 60 * 24 * 3);
             let msg = `<a href="http://localhost:3000/change-password/${token}">This is the link to change your password</a>`;
             (0, sendEmail_1.sendEmail)("lol@mail.com", msg);
@@ -157,6 +177,15 @@ let UserResolver = class UserResolver {
         });
     }
 };
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    __param(0, (0, type_graphql_1.Ctx)()),
+    __param(1, (0, type_graphql_1.Arg)("token")),
+    __param(2, (0, type_graphql_1.Arg)("password")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "changePassword", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => Boolean),
     __param(0, (0, type_graphql_1.Ctx)()),

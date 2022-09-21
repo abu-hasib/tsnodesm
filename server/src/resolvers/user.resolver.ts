@@ -38,6 +38,31 @@ class UserResponse {
 @Resolver(() => User)
 export class UserResolver {
   @Mutation(() => Boolean)
+  /**
+   * changePassword
+   */
+  public async changePassword(
+    @Ctx() { em, redis }: MyContext,
+    @Arg("token") token: string,
+    @Arg("password") password: string
+  ) {
+    try {
+      const value = await redis.get(FORGET_PASSWORD_PREFIX + token);
+      if (value) {
+        const user = await em
+          .getRepository(User)
+          .findOneOrFail({ id: Number(value) });
+        if (user) user.password = await argon2.hash(password);
+        await em.persist(user).flush();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  }
+  @Mutation(() => Boolean)
   public async forgotPassword(
     @Ctx() { em, redis }: MyContext,
     @Arg("email") email: string
@@ -45,6 +70,7 @@ export class UserResolver {
     try {
       const user = await em.getRepository(User).findOneOrFail({ email });
       let token = v4();
+      console.log("***: ", user.id);
       redis.set(
         FORGET_PASSWORD_PREFIX + token,
         user.id,
