@@ -11,7 +11,9 @@ interface NavBarProps {
 const NavBar: React.FC<NavBarProps> = () => {
   const [isServer, setIsServer] = useState(false);
   const [{}, logout] = useLogoutMutation();
-  const [{ data, fetching, error }] = useMeQuery();
+  const [{ data, fetching, error }] = useMeQuery({
+    pause: isServer,
+  });
   useEffect(() => {
     console.log("##: ", typeof window === "undefined");
     setIsServer(typeof window === "undefined"), [];

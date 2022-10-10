@@ -15,6 +15,8 @@ interface forgotPasswordProps {}
 
 const forgotPassword: React.FC<forgotPasswordProps> = (props) => {
   const [, forgotPassword] = useForgotPasswordMutation();
+  const [isDone, setIsDone] = React.useState(false);
+
   return (
     <main className="">
       <Head>
@@ -27,37 +29,44 @@ const forgotPassword: React.FC<forgotPasswordProps> = (props) => {
         <div className="p-8">
           <div className={styles.container}>
             <div className={styles.formContainer}>
-              <Formik
-                initialValues={{ email: "" }}
-                onSubmit={async (values, { setSubmitting, setErrors }) => {
-                  const response = await forgotPassword({
-                    email: values.email,
-                  });
-                  console.log("^^: ", response);
-                  setSubmitting(false);
-                }}
-              >
-                {({ handleSubmit, isSubmitting }) => (
-                  <form className="mt-6" onSubmit={handleSubmit}>
-                    <div className="relative">
-                      <InputField
-                        name="email"
-                        label="Email"
-                        type="text"
-                        className={styles.inputField}
-                        placeholder="john@doe.com"
-                      />
-                    </div>
+              {isDone ? (
+                <div>
+                  Reset instruction is on the way to the provided email address.
+                </div>
+              ) : (
+                <Formik
+                  initialValues={{ email: "" }}
+                  onSubmit={async (values, { setSubmitting, setErrors }) => {
+                    const response = await forgotPassword({
+                      email: values.email,
+                    });
+                    setIsDone(true);
+                    console.log("^^: ", response);
+                    setSubmitting(false);
+                  }}
+                >
+                  {({ handleSubmit, isSubmitting }) => (
+                    <form className="mt-6" onSubmit={handleSubmit}>
+                      <div className="relative">
+                        <InputField
+                          name="email"
+                          label="Email"
+                          type="text"
+                          className={styles.inputField}
+                          placeholder="john@doe.com"
+                        />
+                      </div>
 
-                    <input
-                      type="submit"
-                      value={isSubmitting ? "Loading" : "Send"}
-                      disabled={isSubmitting}
-                      className={styles.button}
-                    />
-                  </form>
-                )}
-              </Formik>
+                      <input
+                        type="submit"
+                        value={isSubmitting ? "Loading" : "Send"}
+                        disabled={isSubmitting}
+                        className={styles.button}
+                      />
+                    </form>
+                  )}
+                </Formik>
+              )}
             </div>
           </div>
         </div>

@@ -1,12 +1,10 @@
 // console.log("Hellop@!");
 import "reflect-metadata";
-import { MikroORM } from "@mikro-orm/core";
 import { ApolloServer } from "apollo-server-express";
 // import { Book } from "./entities/book.entity";
 import express from "express";
 import { buildSchema } from "type-graphql";
 
-import config from "./mikro-orm.config";
 import { BookResolver } from "./resolvers/book.resolver";
 import http from "http";
 import { PostResolver } from "./resolvers/post.resolver";
@@ -16,18 +14,26 @@ const session = require("express-session");
 let RedisStore = require("connect-redis")(session);
 import cors from "cors";
 import Redis from "ioredis";
+import { AppDataSource } from "./data-source";
 
 async function main() {
   try {
     const app = express();
     const httpServer = http.createServer(app);
-    const orm = await MikroORM.init(config);
-    const migrator = await orm.getMigrator();
-    const migrations = await migrator.getPendingMigrations();
-    if (migrations && migrations.length > 0) {
-      console.log("%%: ", migrations.length);
-      await migrator.up();
-    }
+
+    await AppDataSource.initialize().then(() => {
+      console.log("Data Source has been initialized!!");
+    });
+    // .catch((err) => {
+    //   console.error("Error during Data Source initialization", err);
+    // });
+    // const orm = await MikroORM.init(config);
+    // const migrator = await orm.getMigrator();
+    // const migrations = await migrator.getPendingMigrations();
+    // if (migrations && migrations.length > 0) {
+    //   console.log("%%: ", migrations.length);
+    //   await migrator.up();
+    // }
 
     // redis@v4
     // const { createClient } = require("redis");
@@ -64,7 +70,6 @@ async function main() {
         resolvers: [BookResolver, PostResolver, UserResolver],
       }),
       context: ({ req, res }) => ({
-        em: orm.em,
         req,
         res,
         redis: redisClient,

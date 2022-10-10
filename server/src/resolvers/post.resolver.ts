@@ -1,43 +1,82 @@
 import { Post } from "../entities/post.entity";
-import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql";
+import {
+  Arg,
+  Ctx,
+  Field,
+  InputType,
+  Int,
+  Mutation,
+  Query,
+  Resolver,
+  UseMiddleware,
+} from "type-graphql";
+import { AppDataSource } from "../data-source";
 import { MyContext } from "src/utils/interfaces/context.interface";
+import { isAuth } from "../middleware/isAuth";
+const postRepo = AppDataSource.getRepository(Post);
+
+@InputType()
+class PostInput {
+  @Field()
+  title: string;
+
+  @Field({ nullable: true })
+  text: string;
+}
 
 @Resolver(() => Post)
 export class PostResolver {
   @Query(() => [Post])
-  public async getPosts(@Ctx() { em }: MyContext): Promise<Post[]> {
-    return await em.find(Post, {});
+  public async getPosts(
+    @Arg("limit", () => Int) limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string
+  ): Promise<Post[]> {
+    const cap = Math.min(50, limit);
+    const qb = postRepo
+      .createQueryBuilder("post")
+      .take(cap)
+      .orderBy('"createdAt"', "DESC");
+
+    if (cursor) {
+      qb.where('"updatedAt" < :cursor', { cursor });
+      // '"post"."createdAt" > :cursor', { cursor }
+    }
+    return qb.getMany();
+    // return await postRepo.find({});
   }
   @Mutation(() => Post)
-  public async addPost(@Arg("title") title: string, @Ctx() ctx: MyContext) {
-    const post = new Post();
-    post.title = title;
-    await ctx.em.persist(post).flush();
-    return post;
-  }
-  @Mutation(() => Post, { nullable: true })
-  public async updatePost(
-    @Arg("id") id: number,
-    @Arg("title") title: string,
-    @Ctx() { em }: MyContext
+  @UseMiddleware(isAuth)
+  public async createPost(
+    @Arg("input") input: PostInput,
+    @Ctx() { req }: MyContext
   ) {
+    const post = postRepo.create({ ...input, creatorId: req.session.userId });
+    return await postRepo.save(post);
+  }
+
+  @Mutation(() => Post, { nullable: true })
+  public async updatePost(@Arg("id") id: number, @Arg("title") title: string) {
     if (!title) return false;
     try {
-      const post = await em.getRepository(Post).findOneOrFail({ id });
-      post.title = title;
-      console.log(post);
-      return post;
+      const postToUpdate = await postRepo.findOneBy({ id });
+      if (!postToUpdate) return null;
+      postToUpdate.title = title;
+      console.log(postToUpdate);
+      await postRepo.save(postToUpdate);
+      return postToUpdate;
     } catch (err) {
       console.error(err.message);
 
       return null;
     }
   }
+
   @Mutation(() => Boolean, { nullable: true })
-  public async deletePost(@Arg("id") id: number, @Ctx() { em }: MyContext) {
+  public async deletePost(@Arg("id") id: number) {
     try {
-      const post = await em.getRepository(Post).findOneOrFail({ id });
-      await em.getRepository(Post).remove(post).flush();
+      const postToRemove = await postRepo.findOneBy({ id });
+      if (!postToRemove) return;
+      await postRepo.remove(postToRemove);
       return true;
     } catch (err) {
       console.error(err.message);

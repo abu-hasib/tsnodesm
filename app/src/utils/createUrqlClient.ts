@@ -1,6 +1,8 @@
 import { Cache, cacheExchange, QueryInput } from "@urql/exchange-graphcache";
-import { dedupExchange, fetchExchange } from "urql";
+import Router from "next/router";
+import { dedupExchange, errorExchange, fetchExchange } from "urql";
 import {
+  ChangePasswordMutation,
   LoginMutation,
   LogoutMutation,
   MeDocument,
@@ -69,10 +71,29 @@ export const createUrqlClient = (ssrExchange: any) => ({
               }
             );
           },
+          changePassword: (_result, args, cache, info) => {
+            typedUpdateQuery<ChangePasswordMutation, MeQuery>(
+              cache,
+              { query: MeDocument },
+              _result,
+              (result, query) => {
+                return {
+                  me: result.changePassword.user,
+                };
+              }
+            );
+          },
         },
       },
     }),
     ssrExchange,
+    errorExchange({
+      onError(error) {
+        // console.error("###: ", error);
+        if (error.message.includes("not authenticated"))
+          Router.replace("/login");
+      },
+    }),
     fetchExchange,
   ],
 });

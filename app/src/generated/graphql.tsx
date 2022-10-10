@@ -13,6 +13,7 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  DateTime: any;
 };
 
 export type FieldError = {
@@ -23,8 +24,8 @@ export type FieldError = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  addPost: Post;
-  changePassword: Scalars['Boolean'];
+  changePassword: UserResponse;
+  createPost: Post;
   deletePost?: Maybe<Scalars['Boolean']>;
   forgotPassword: Scalars['Boolean'];
   login: UserResponse;
@@ -34,14 +35,14 @@ export type Mutation = {
 };
 
 
-export type MutationAddPostArgs = {
-  title: Scalars['String'];
-};
-
-
 export type MutationChangePasswordArgs = {
   password: Scalars['String'];
   token: Scalars['String'];
+};
+
+
+export type MutationCreatePostArgs = {
+  input: PostInput;
 };
 
 
@@ -73,7 +74,17 @@ export type MutationUpdatePostArgs = {
 
 export type Post = {
   __typename?: 'Post';
+  createdAt: Scalars['DateTime'];
+  creatorId: Scalars['Float'];
   id: Scalars['Float'];
+  points: Scalars['Float'];
+  text: Scalars['String'];
+  title: Scalars['String'];
+  updatedAt: Scalars['DateTime'];
+};
+
+export type PostInput = {
+  text?: InputMaybe<Scalars['String']>;
   title: Scalars['String'];
 };
 
@@ -83,6 +94,12 @@ export type Query = {
   hello: Scalars['String'];
   hello2: Scalars['String'];
   me?: Maybe<User>;
+};
+
+
+export type QueryGetPostsArgs = {
+  cursor?: InputMaybe<Scalars['String']>;
+  limit: Scalars['Int'];
 };
 
 export type User = {
@@ -112,7 +129,14 @@ export type ChangePasswordMutationVariables = Exact<{
 }>;
 
 
-export type ChangePasswordMutation = { __typename?: 'Mutation', changePassword: boolean };
+export type ChangePasswordMutation = { __typename?: 'Mutation', changePassword: { __typename?: 'UserResponse', errors?: Array<{ __typename?: 'FieldError', field: string, message: string }> | null, user?: { __typename?: 'User', id: number, email: string, username: string } | null } };
+
+export type CreatePostMutationVariables = Exact<{
+  input: PostInput;
+}>;
+
+
+export type CreatePostMutation = { __typename?: 'Mutation', createPost: { __typename?: 'Post', id: number, title: string, text: string, creatorId: number, points: number } };
 
 export type ForgotPasswordMutationVariables = Exact<{
   email: Scalars['String'];
@@ -146,10 +170,13 @@ export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type MeQuery = { __typename?: 'Query', me?: { __typename?: 'User', id: number, email: string, username: string } | null };
 
-export type PostsQueryVariables = Exact<{ [key: string]: never; }>;
+export type PostsQueryVariables = Exact<{
+  limit: Scalars['Int'];
+  cursor?: InputMaybe<Scalars['String']>;
+}>;
 
 
-export type PostsQuery = { __typename?: 'Query', getPosts: Array<{ __typename?: 'Post', id: number, title: string }> };
+export type PostsQuery = { __typename?: 'Query', getPosts: Array<{ __typename?: 'Post', id: number, title: string, text: string, createdAt: any, updatedAt: any }> };
 
 export const UserFragFragmentDoc = gql`
     fragment UserFrag on User {
@@ -160,12 +187,35 @@ export const UserFragFragmentDoc = gql`
     `;
 export const ChangePasswordDocument = gql`
     mutation ChangePassword($token: String!, $password: String!) {
-  changePassword(token: $token, password: $password)
+  changePassword(token: $token, password: $password) {
+    errors {
+      field
+      message
+    }
+    user {
+      ...UserFrag
+    }
+  }
 }
-    `;
+    ${UserFragFragmentDoc}`;
 
 export function useChangePasswordMutation() {
   return Urql.useMutation<ChangePasswordMutation, ChangePasswordMutationVariables>(ChangePasswordDocument);
+};
+export const CreatePostDocument = gql`
+    mutation CreatePost($input: PostInput!) {
+  createPost(input: $input) {
+    id
+    title
+    text
+    creatorId
+    points
+  }
+}
+    `;
+
+export function useCreatePostMutation() {
+  return Urql.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument);
 };
 export const ForgotPasswordDocument = gql`
     mutation ForgotPassword($email: String!) {
@@ -231,14 +281,17 @@ export function useMeQuery(options?: Omit<Urql.UseQueryArgs<MeQueryVariables>, '
   return Urql.useQuery<MeQuery, MeQueryVariables>({ query: MeDocument, ...options });
 };
 export const PostsDocument = gql`
-    query Posts {
-  getPosts {
+    query Posts($limit: Int!, $cursor: String) {
+  getPosts(limit: $limit, cursor: $cursor) {
     id
     title
+    text
+    createdAt
+    updatedAt
   }
 }
     `;
 
-export function usePostsQuery(options?: Omit<Urql.UseQueryArgs<PostsQueryVariables>, 'query'>) {
+export function usePostsQuery(options: Omit<Urql.UseQueryArgs<PostsQueryVariables>, 'query'>) {
   return Urql.useQuery<PostsQuery, PostsQueryVariables>({ query: PostsDocument, ...options });
 };
