@@ -11,12 +11,14 @@ interface NavBarProps {
 const NavBar: React.FC<NavBarProps> = () => {
   const [isServer, setIsServer] = useState(false);
   const [{}, logout] = useLogoutMutation();
-  const [{ data, fetching, error }] = useMeQuery();
+  const [{ data, fetching, error }] = useMeQuery({
+    pause: isServer,
+  });
   useEffect(() => {
-    console.log("##: ", typeof window === "undefined");
+    // console.log("##: ", typeof window === "undefined");
     setIsServer(typeof window === "undefined"), [];
   });
-  console.log("$$: ", data);
+  // console.log("$$: ", data);
   let body;
   if (fetching || error) {
   } else if (!data?.me) {

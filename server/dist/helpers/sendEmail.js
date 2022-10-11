@@ -11,8 +11,8 @@ async function sendEmail(to, html) {
         port: 587,
         secure: false,
         auth: {
-            user: "dewx6u36oxs43v5s@ethereal.email",
-            pass: "1sbNZ8e36VaY3Fujzj",
+            user: "jwnh57rxtcdt3hey@ethereal.email",
+            pass: "88197Ukcd9sjmXCBE1",
         },
     });
     let info = await transporter.sendMail({

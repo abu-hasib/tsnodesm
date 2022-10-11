@@ -25,6 +25,8 @@ const formatConstraints_1 = require("../helpers/formatConstraints");
 const sendEmail_1 = require("../helpers/sendEmail");
 const constants_1 = require("../constants");
 const user_validator_1 = require("../contracts/validators/user.validator");
+const data_source_1 = require("../data-source");
+const userRepo = data_source_1.AppDataSource.getRepository(user_entity_1.User);
 let FieldError = class FieldError {
 };
 __decorate([
@@ -52,10 +54,54 @@ UserResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], UserResponse);
 let UserResolver = class UserResolver {
-    async forgotPassword({ em, redis }, email) {
+    async changePassword({ redis }, token, password) {
         try {
-            const user = await em.getRepository(user_entity_1.User).findOneOrFail({ email });
+            const key = constants_1.FORGET_PASSWORD_PREFIX + token;
+            const userId = await redis.get(key);
+            if (userId) {
+                const user = await userRepo.findOneBy({ id: parseInt(userId) });
+                if (user) {
+                    const validateResult = await (0, class_validator_1.validate)(userRepo.create({
+                        password,
+                        createdAt: undefined,
+                        updatedAt: undefined,
+                        email: undefined,
+                        username: undefined,
+                    }), { skipMissingProperties: true });
+                    if (validateResult.length > 0) {
+                        const validationErrors = validateResult.map((error) => {
+                            return {
+                                field: error.property,
+                                message: (0, formatConstraints_1.formatContraints)(error),
+                            };
+                        });
+                        return {
+                            errors: validationErrors,
+                        };
+                    }
+                    else {
+                        await userRepo.update({ id: parseInt(userId) }, { password: await argon2_1.default.hash(password) });
+                        redis.del(key);
+                        return {
+                            user,
+                        };
+                    }
+                }
+            }
+            return { errors: [{ field: "token", message: "token expired" }] };
+        }
+        catch (error) {
+            console.log(error);
+            return {
+                errors: [{ field: "token", message: "token expired" }],
+            };
+        }
+    }
+    async forgotPassword({ redis }, email) {
+        try {
+            const user = await userRepo.findOneByOrFail({ email });
             let token = (0, uuid_1.v4)();
+            console.log("***: ", user.id);
             redis.set(constants_1.FORGET_PASSWORD_PREFIX + token, user.id, "EX", 1000 * 60 * 60 * 60 * 24 * 3);
             let msg = `<a href="http://localhost:3000/change-password/${token}">This is the link to change your password</a>`;
             (0, sendEmail_1.sendEmail)("lol@mail.com", msg);
@@ -66,20 +112,18 @@ let UserResolver = class UserResolver {
             return false;
         }
     }
-    async me({ em, req }) {
+    async me({ req }) {
         if (!req.session.userId)
             return null;
-        const me = await em
-            .getRepository(user_entity_1.User)
-            .findOneOrFail({ id: req.session.userId });
+        const me = await userRepo.findOneByOrFail({ id: req.session.userId });
         return me;
     }
-    async register(input, { em, req }) {
+    async register(input, { req }) {
         try {
-            const newUser = new user_entity_1.User(input);
-            const validateResult = await (0, class_validator_1.validate)(newUser);
-            newUser.password = await argon2_1.default.hash(input.password);
-            console.log("$$: ", newUser.password);
+            const newUser2 = userRepo.create(input);
+            console.log("@@: ", newUser2);
+            const validateResult = await (0, class_validator_1.validate)(newUser2);
+            newUser2.password = await argon2_1.default.hash(newUser2.password);
             if (validateResult.length > 0) {
                 const validationErrors = validateResult.map((error) => {
                     return {
@@ -92,10 +136,10 @@ let UserResolver = class UserResolver {
                 };
             }
             else {
-                await em.persist(newUser).flush();
-                req.session.userId = newUser.id;
+                await userRepo.save(newUser2);
+                req.session.userId = newUser2.id;
             }
-            return { user: newUser };
+            return { user: newUser2 };
         }
         catch (err) {
             console.log("&&: ", err);
@@ -120,11 +164,9 @@ let UserResolver = class UserResolver {
             };
         }
     }
-    async login(login, password, { em, req }) {
+    async login(login, password, { req }) {
         try {
-            const user = await em
-                .getRepository(user_entity_1.User)
-                .findOneOrFail(login.includes("@") ? { email: login } : { username: login });
+            const user = await user_entity_1.User.findOneByOrFail(login.includes("@") ? { email: login } : { username: login });
             if (!user)
                 return {
                     errors: [{ field: "email", message: "User does not exist" }],
@@ -157,6 +199,15 @@ let UserResolver = class UserResolver {
         });
     }
 };
+__decorate([
+    (0, type_graphql_1.Mutation)(() => UserResponse),
+    __param(0, (0, type_graphql_1.Ctx)()),
+    __param(1, (0, type_graphql_1.Arg)("token")),
+    __param(2, (0, type_graphql_1.Arg)("password")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, String]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "changePassword", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => Boolean),
     __param(0, (0, type_graphql_1.Ctx)()),

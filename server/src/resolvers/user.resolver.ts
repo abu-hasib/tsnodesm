@@ -16,7 +16,8 @@ import { formatContraints } from "../helpers/formatConstraints";
 import { sendEmail } from "../helpers/sendEmail";
 import { FORGET_PASSWORD_PREFIX } from "../constants";
 import { UserValidate } from "../contracts/validators/user.validator";
-// ll
+import { AppDataSource } from "../data-source";
+const userRepo = AppDataSource.getRepository(User);
 
 @ObjectType()
 class FieldError {
@@ -37,14 +38,70 @@ class UserResponse {
 
 @Resolver(() => User)
 export class UserResolver {
+  @Mutation(() => UserResponse)
+  /**
+   * changePassword
+   */
+  public async changePassword(
+    @Ctx() { redis }: MyContext,
+    @Arg("token") token: string,
+    @Arg("password") password: string
+  ): Promise<UserResponse> {
+    try {
+      const key = FORGET_PASSWORD_PREFIX + token;
+      const userId = await redis.get(key);
+      if (userId) {
+        const user = await userRepo.findOneBy({ id: parseInt(userId) });
+        if (user) {
+          const validateResult = await validate(
+            userRepo.create({
+              password,
+              createdAt: undefined,
+              updatedAt: undefined,
+              email: undefined,
+              username: undefined,
+            }),
+            { skipMissingProperties: true }
+          );
+          if (validateResult.length > 0) {
+            const validationErrors = validateResult.map((error) => {
+              return {
+                field: error.property,
+                message: formatContraints(error),
+              };
+            });
+            return {
+              errors: validationErrors,
+            };
+          } else {
+            await userRepo.update(
+              { id: parseInt(userId) },
+              { password: await argon2.hash(password) }
+            );
+            redis.del(key);
+            return {
+              user,
+            };
+          }
+        }
+      }
+      return { errors: [{ field: "token", message: "token expired" }] };
+    } catch (error) {
+      console.log(error);
+      return {
+        errors: [{ field: "token", message: "token expired" }],
+      };
+    }
+  }
   @Mutation(() => Boolean)
   public async forgotPassword(
-    @Ctx() { em, redis }: MyContext,
+    @Ctx() { redis }: MyContext,
     @Arg("email") email: string
   ) {
     try {
-      const user = await em.getRepository(User).findOneOrFail({ email });
+      const user = await userRepo.findOneByOrFail({ email });
       let token = v4();
+      console.log("***: ", user.id);
       redis.set(
         FORGET_PASSWORD_PREFIX + token,
         user.id,
@@ -62,23 +119,23 @@ export class UserResolver {
   }
 
   @Query(() => User, { nullable: true })
-  public async me(@Ctx() { em, req }: MyContext) {
+  public async me(@Ctx() { req }: MyContext) {
     if (!req.session.userId) return null;
-    const me = await em
-      .getRepository(User)
-      .findOneOrFail({ id: req.session.userId });
+    const me = await userRepo.findOneByOrFail({ id: req.session.userId });
     return me;
   }
+
   @Mutation(() => UserResponse)
   public async register(
     @Arg("input") input: UserValidate,
-    @Ctx() { em, req }: MyContext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
     try {
-      const newUser = new User(input);
-      const validateResult = await validate(newUser);
-      newUser.password = await argon2.hash(input.password);
-      console.log("$$: ", newUser.password);
+      const newUser2 = userRepo.create(input);
+      console.log("@@: ", newUser2);
+
+      const validateResult = await validate(newUser2);
+      newUser2.password = await argon2.hash(newUser2.password);
       if (validateResult.length > 0) {
         const validationErrors = validateResult.map((error) => {
           return {
@@ -91,10 +148,10 @@ export class UserResolver {
           errors: validationErrors,
         };
       } else {
-        await em.persist(newUser).flush();
-        req.session.userId = newUser.id;
+        await userRepo.save(newUser2);
+        req.session.userId = newUser2.id;
       }
-      return { user: newUser };
+      return { user: newUser2 };
     } catch (err) {
       console.log("&&: ", err);
       if (err.detail.includes("already exists")) {
@@ -123,14 +180,12 @@ export class UserResolver {
   public async login(
     @Arg("login") login: string,
     @Arg("password") password: string,
-    @Ctx() { em, req }: MyContext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
     try {
-      const user = await em
-        .getRepository(User)
-        .findOneOrFail(
-          login.includes("@") ? { email: login } : { username: login }
-        );
+      const user = await User.findOneByOrFail(
+        login.includes("@") ? { email: login } : { username: login }
+      );
       if (!user)
         return {
           errors: [{ field: "email", message: "User does not exist" }],
