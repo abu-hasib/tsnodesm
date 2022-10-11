@@ -9,7 +9,8 @@
     "dev": "nodemon dist/index.js",
     "wd": "yarn watch & yarn dev",
     "test": "mocha",
-    "migration:create": "npx mikro-orm migration:create"
+    "migration:create": "npx mikro-orm migration:create",
+    "typeorm": "typeorm-ts-node-commonjs"
   },
   "keywords": [],
   "author": "",

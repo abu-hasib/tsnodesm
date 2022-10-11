@@ -22,6 +22,7 @@ async function main() {
         const app = (0, express_1.default)();
         const httpServer = http_1.default.createServer(app);
         await data_source_1.AppDataSource.initialize().then(() => {
+            data_source_1.AppDataSource.runMigrations();
             console.log("Data Source has been initialized!!");
         });
         let redisClient = new ioredis_1.default();

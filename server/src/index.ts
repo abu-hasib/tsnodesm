@@ -22,8 +22,11 @@ async function main() {
     const httpServer = http.createServer(app);
 
     await AppDataSource.initialize().then(() => {
+      AppDataSource.runMigrations();
+
       console.log("Data Source has been initialized!!");
     });
+    // await Post.delete({});
     // .catch((err) => {
     //   console.error("Error during Data Source initialization", err);
     // });

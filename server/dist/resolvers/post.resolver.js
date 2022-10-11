@@ -31,17 +31,36 @@ __decorate([
 PostInput = __decorate([
     (0, type_graphql_1.InputType)()
 ], PostInput);
+let PostObject = class PostObject {
+};
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", Boolean)
+], PostObject.prototype, "hasMore", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(() => [post_entity_1.Post]),
+    __metadata("design:type", Array)
+], PostObject.prototype, "posts", void 0);
+PostObject = __decorate([
+    (0, type_graphql_1.ObjectType)()
+], PostObject);
 let PostResolver = class PostResolver {
     async getPosts(limit, cursor) {
         const cap = Math.min(50, limit);
+        const capPlus1 = cap + 1;
         const qb = postRepo
             .createQueryBuilder("post")
             .take(cap)
             .orderBy('"createdAt"', "DESC");
         if (cursor) {
-            qb.where('"updatedAt" < :cursor', { cursor });
+            qb.where('"createdAt" < :cursor', { cursor });
         }
-        return qb.getMany();
+        const posts = await qb.getMany();
+        console.log(posts.length, capPlus1);
+        return {
+            hasMore: posts.length === cap,
+            posts: posts,
+        };
     }
     async createPost(input, { req }) {
         const post = postRepo.create(Object.assign(Object.assign({}, input), { creatorId: req.session.userId }));
@@ -79,7 +98,7 @@ let PostResolver = class PostResolver {
     }
 };
 __decorate([
-    (0, type_graphql_1.Query)(() => [post_entity_1.Post]),
+    (0, type_graphql_1.Query)(() => PostObject),
     __param(0, (0, type_graphql_1.Arg)("limit", () => type_graphql_1.Int)),
     __param(1, (0, type_graphql_1.Arg)("cursor", () => String, { nullable: true })),
     __metadata("design:type", Function),

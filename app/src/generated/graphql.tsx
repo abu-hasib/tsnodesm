@@ -88,9 +88,15 @@ export type PostInput = {
   title: Scalars['String'];
 };
 
+export type PostObject = {
+  __typename?: 'PostObject';
+  hasMore: Scalars['Boolean'];
+  posts: Array<Post>;
+};
+
 export type Query = {
   __typename?: 'Query';
-  getPosts: Array<Post>;
+  getPosts: PostObject;
   hello: Scalars['String'];
   hello2: Scalars['String'];
   me?: Maybe<User>;
@@ -176,7 +182,7 @@ export type PostsQueryVariables = Exact<{
 }>;
 
 
-export type PostsQuery = { __typename?: 'Query', getPosts: Array<{ __typename?: 'Post', id: number, title: string, text: string, createdAt: any, updatedAt: any }> };
+export type PostsQuery = { __typename?: 'Query', getPosts: { __typename?: 'PostObject', hasMore: boolean, posts: Array<{ __typename?: 'Post', createdAt: any, title: string, id: number, creatorId: number, text: string, updatedAt: any }> } };
 
 export const UserFragFragmentDoc = gql`
     fragment UserFrag on User {
@@ -283,11 +289,15 @@ export function useMeQuery(options?: Omit<Urql.UseQueryArgs<MeQueryVariables>, '
 export const PostsDocument = gql`
     query Posts($limit: Int!, $cursor: String) {
   getPosts(limit: $limit, cursor: $cursor) {
-    id
-    title
-    text
-    createdAt
-    updatedAt
+    hasMore
+    posts {
+      createdAt
+      title
+      id
+      creatorId
+      text
+      updatedAt
+    }
   }
 }
     `;

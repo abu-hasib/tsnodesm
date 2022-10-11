@@ -6,6 +6,7 @@ import {
   InputType,
   Int,
   Mutation,
+  ObjectType,
   Query,
   Resolver,
   UseMiddleware,
@@ -24,24 +25,39 @@ class PostInput {
   text: string;
 }
 
+@ObjectType()
+class PostObject {
+  @Field()
+  hasMore: boolean;
+
+  @Field(() => [Post])
+  posts: Post[];
+}
+
 @Resolver(() => Post)
 export class PostResolver {
-  @Query(() => [Post])
+  @Query(() => PostObject)
   public async getPosts(
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string
-  ): Promise<Post[]> {
+  ): Promise<Promise<PostObject>> {
     const cap = Math.min(50, limit);
+    const capPlus1 = cap + 1;
     const qb = postRepo
       .createQueryBuilder("post")
       .take(cap)
       .orderBy('"createdAt"', "DESC");
 
     if (cursor) {
-      qb.where('"updatedAt" < :cursor', { cursor });
+      qb.where('"createdAt" < :cursor', { cursor });
       // '"post"."createdAt" > :cursor', { cursor }
     }
-    return qb.getMany();
+    const posts = await qb.getMany();
+    console.log(posts.length, capPlus1);
+    return {
+      hasMore: posts.length === cap,
+      posts: posts,
+    };
     // return await postRepo.find({});
   }
   @Mutation(() => Post)

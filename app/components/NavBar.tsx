@@ -15,10 +15,10 @@ const NavBar: React.FC<NavBarProps> = () => {
     pause: isServer,
   });
   useEffect(() => {
-    console.log("##: ", typeof window === "undefined");
+    // console.log("##: ", typeof window === "undefined");
     setIsServer(typeof window === "undefined"), [];
   });
-  console.log("$$: ", data);
+  // console.log("$$: ", data);
   let body;
   if (fetching || error) {
   } else if (!data?.me) {
