@@ -14,6 +14,7 @@ const type_graphql_1 = require("type-graphql");
 const class_validator_1 = require("class-validator");
 const typeorm_1 = require("typeorm");
 const post_entity_1 = require("./post.entity");
+const upvote_entity_1 = require("./upvote.entity");
 let User = class User extends typeorm_1.BaseEntity {
     constructor() {
         super(...arguments);
@@ -54,6 +55,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => post_entity_1.Post, (post) => post.creator),
     __metadata("design:type", Array)
 ], User.prototype, "posts", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => upvote_entity_1.Upvote, (upvote) => upvote.user),
+    __metadata("design:type", Array)
+], User.prototype, "upvotes", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
