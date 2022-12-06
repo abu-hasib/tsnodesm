@@ -4,10 +4,16 @@ query Posts($limit: Int!, $cursor: String) {
     posts {
       createdAt
       title
-      id
-      creatorId
       text
+      id
+      points
+      creatorId
       updatedAt
+      creator {
+        id
+        email
+        username
+      }
     }
   }
 }

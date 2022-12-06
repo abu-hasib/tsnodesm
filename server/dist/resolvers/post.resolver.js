@@ -17,7 +17,10 @@ const post_entity_1 = require("../entities/post.entity");
 const type_graphql_1 = require("type-graphql");
 const data_source_1 = require("../data-source");
 const isAuth_1 = require("../middleware/isAuth");
+const upvote_entity_1 = require("../entities/upvote.entity");
 const postRepo = data_source_1.AppDataSource.getRepository(post_entity_1.Post);
+const upvoteRepo = data_source_1.AppDataSource.getRepository(upvote_entity_1.Upvote);
+const queryRunner = data_source_1.AppDataSource.createQueryRunner();
 let PostInput = class PostInput {
 };
 __decorate([
@@ -45,18 +48,45 @@ PostObject = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], PostObject);
 let PostResolver = class PostResolver {
+    async vote(postId, value, { req }) {
+        const { userId } = req.session;
+        const evalValue = value !== -1 ? 1 : -1;
+        const isExist = await upvoteRepo.findOneBy({ postId });
+        if (!isExist) {
+            await upvoteRepo.insert({
+                userId,
+                postId,
+                value: evalValue,
+            });
+        }
+        queryRunner.query(`
+      update post
+      set points = points +  $1
+      where id = $2
+    `, [evalValue, postId]);
+        return true;
+    }
     async getPosts(limit, cursor) {
         const cap = Math.min(50, limit);
-        const capPlus1 = cap + 1;
-        const qb = postRepo
-            .createQueryBuilder("post")
-            .take(cap)
-            .orderBy('"createdAt"', "DESC");
+        const args = [];
         if (cursor) {
-            qb.where('"createdAt" < :cursor', { cursor });
+            args.push(new Date(cursor));
         }
-        const posts = await qb.getMany();
-        console.log(posts.length, capPlus1);
+        const posts = await queryRunner.query(`
+    select post.*,
+    json_build_object(
+      'id', "user".id,
+      'username', "user".username,
+      'email', "user".email,
+      'createdAt', "user"."createdAt",
+      'updatedAt', "user"."updatedAt"
+     ) creator
+    from post
+    inner join "user" on "post"."creatorId" = "user".id
+    ${cursor ? `where post."createdAt" < $1` : ""}
+    order by post."createdAt" desc
+    limit ${cap}
+    `, args);
         return {
             hasMore: posts.length === cap,
             posts: posts,
@@ -97,6 +127,16 @@ let PostResolver = class PostResolver {
         }
     }
 };
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    (0, type_graphql_1.UseMiddleware)(isAuth_1.isAuth),
+    __param(0, (0, type_graphql_1.Arg)("postId", () => type_graphql_1.Int)),
+    __param(1, (0, type_graphql_1.Arg)("value", () => type_graphql_1.Int)),
+    __param(2, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Number, Object]),
+    __metadata("design:returntype", Promise)
+], PostResolver.prototype, "vote", null);
 __decorate([
     (0, type_graphql_1.Query)(() => PostObject),
     __param(0, (0, type_graphql_1.Arg)("limit", () => type_graphql_1.Int)),

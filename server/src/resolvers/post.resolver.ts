@@ -14,7 +14,10 @@ import {
 import { AppDataSource } from "../data-source";
 import { MyContext } from "src/utils/interfaces/context.interface";
 import { isAuth } from "../middleware/isAuth";
+import { Upvote } from "../entities/upvote.entity";
 const postRepo = AppDataSource.getRepository(Post);
+const upvoteRepo = AppDataSource.getRepository(Upvote);
+const queryRunner = AppDataSource.createQueryRunner();
 
 @InputType()
 class PostInput {
@@ -36,24 +39,74 @@ class PostObject {
 
 @Resolver(() => Post)
 export class PostResolver {
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async vote(
+    @Arg("postId", () => Int) postId: number,
+    @Arg("value", () => Int) value: number,
+    @Ctx() { req }: MyContext
+  ) {
+    const { userId } = req.session;
+    const evalValue = value !== -1 ? 1 : -1;
+    const isExist = await upvoteRepo.findOneBy({ postId });
+    if (!isExist) {
+      await upvoteRepo.insert({
+        userId,
+        postId,
+        value: evalValue,
+      });
+    }
+    queryRunner.query(
+      `
+      update post
+      set points = points +  $1
+      where id = $2
+    `,
+      [evalValue, postId]
+    );
+    return true;
+  }
   @Query(() => PostObject)
   public async getPosts(
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string
   ): Promise<Promise<PostObject>> {
     const cap = Math.min(50, limit);
-    const capPlus1 = cap + 1;
-    const qb = postRepo
-      .createQueryBuilder("post")
-      .take(cap)
-      .orderBy('"createdAt"', "DESC");
-
+    // const capPlus1 = cap + 1;
+    const args = [];
     if (cursor) {
-      qb.where('"createdAt" < :cursor', { cursor });
-      // '"post"."createdAt" > :cursor', { cursor }
+      args.push(new Date(cursor));
     }
-    const posts = await qb.getMany();
-    console.log(posts.length, capPlus1);
+    const posts = await queryRunner.query(
+      `
+    select post.*,
+    json_build_object(
+      'id', "user".id,
+      'username', "user".username,
+      'email', "user".email,
+      'createdAt', "user"."createdAt",
+      'updatedAt', "user"."updatedAt"
+     ) creator
+    from post
+    inner join "user" on "post"."creatorId" = "user".id
+    ${cursor ? `where post."createdAt" < $1` : ""}
+    order by post."createdAt" desc
+    limit ${cap}
+    `,
+      args
+    );
+
+    //   .createQueryBuilder("post")
+    //   .innerJoinAndSelect("post.creator", "posts.username")
+    //   .orderBy('"createdAt"', "DESC")
+    //   .take(cap);
+
+    // if (cursor) {
+    //   qb.where('"createdAt" < :cursor', { cursor });
+    //   // '"post"."createdAt" > :cursor', { cursor }
+    // }
+    // const posts = await qb.getMany();
+    // console.log(posts.length, capPlus1);
     return {
       hasMore: posts.length === cap,
       posts: posts,

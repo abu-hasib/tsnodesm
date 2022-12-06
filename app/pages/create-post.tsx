@@ -5,6 +5,7 @@ import * as React from "react";
 import InputField from "../components/InputField";
 import Layout from "../components/Layout";
 import { useCreatePostMutation, useMeQuery } from "../src/generated/graphql";
+import { toErrorMap } from "../src/helpers/toErrorMap";
 import { createUrqlClient } from "../src/utils/createUrqlClient";
 import { useIsAuth } from "../src/utils/isAuth";
 
@@ -28,13 +29,7 @@ const CreatePost: React.FC<createPostProps> = (props) => {
               console.log("***: ", response);
               if (response.error?.message.includes("not authenticated"))
                 router.replace("/login");
-
-              // if (response.data?) {
-              //   setErrors(toErrorMap(response.data.login.errors));
-              //   setSubmitting(false);
-              // } else {
-              //   router.push("/");
-              // }
+              router.push("/");
             }}
           >
             {({ handleSubmit, isSubmitting }) => (
@@ -85,3 +80,6 @@ const styles = {
 };
 
 export default withUrqlClient(createUrqlClient)(CreatePost);
+function setErrors(arg0: any) {
+  throw new Error("Function not implemented.");
+}
