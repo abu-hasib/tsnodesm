@@ -1,11 +1,9 @@
 import { Formik } from "formik";
 import { withUrqlClient } from "next-urql";
-import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import InputField from "../components/InputField";
 import Layout from "../components/Layout";
-import NavBar from "../components/NavBar";
 import { useLoginMutation } from "../src/generated/graphql";
 import { toErrorMap } from "../src/helpers/toErrorMap";
 import { createUrqlClient } from "../src/utils/createUrqlClient";

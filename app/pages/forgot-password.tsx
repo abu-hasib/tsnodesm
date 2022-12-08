@@ -1,19 +1,15 @@
 import { Formik } from "formik";
 import { withUrqlClient } from "next-urql";
 import Head from "next/head";
-import Link from "next/link";
-import router from "next/router";
 import * as React from "react";
 import InputField from "../components/InputField";
 import NavBar from "../components/NavBar";
 import { useForgotPasswordMutation } from "../src/generated/graphql";
-import { toErrorMap } from "../src/helpers/toErrorMap";
 import { createUrqlClient } from "../src/utils/createUrqlClient";
-import login from "./login";
 
 interface forgotPasswordProps {}
 
-const forgotPassword: React.FC<forgotPasswordProps> = (props) => {
+const ForgotPassword: React.FC<forgotPasswordProps> = () => {
   const [, forgotPassword] = useForgotPasswordMutation();
   const [isDone, setIsDone] = React.useState(false);
 
@@ -36,7 +32,7 @@ const forgotPassword: React.FC<forgotPasswordProps> = (props) => {
               ) : (
                 <Formik
                   initialValues={{ email: "" }}
-                  onSubmit={async (values, { setSubmitting, setErrors }) => {
+                  onSubmit={async (values, { setSubmitting }) => {
                     const response = await forgotPassword({
                       email: values.email,
                     });
@@ -85,4 +81,4 @@ const styles = {
   screen: "min-h-screen bg-rose-100 flex justify-center items-center",
 };
 
-export default withUrqlClient(createUrqlClient)(forgotPassword);
+export default withUrqlClient(createUrqlClient)(ForgotPassword);

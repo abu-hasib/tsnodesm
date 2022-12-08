@@ -2,18 +2,14 @@ import { ErrorMessage, Formik } from "formik";
 import { NextPage } from "next";
 import { withUrqlClient } from "next-urql";
 import Head from "next/head";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import InputField from "../../components/InputField";
 import NavBar from "../../components/NavBar";
-import {
-  useChangePasswordMutation,
-  useLoginMutation,
-} from "../../src/generated/graphql";
+import { useChangePasswordMutation } from "../../src/generated/graphql";
 import { toErrorMap } from "../../src/helpers/toErrorMap";
 import { createUrqlClient } from "../../src/utils/createUrqlClient";
 
-interface LoginProps {}
+// interface LoginProps {}
 
 const ChangePassword: NextPage = ({}) => {
   const [, change] = useChangePasswordMutation();
