@@ -87,7 +87,7 @@ const cursorPagination = (): Resolver => {
 
 console.log("$$: ", process.env);
 export const createUrqlClient = (ssrExchange: any) => ({
-  url: url || process.env.NEXT_GQL_URL,
+  url: process.env.NEXT_GQL_URL || url,
   fetchOptions: {
     credentials: "include" as const,
   },
