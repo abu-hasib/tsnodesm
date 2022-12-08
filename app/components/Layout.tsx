@@ -1,16 +1,12 @@
 import Head from "next/head";
 import * as React from "react";
 import NavBar from "./NavBar";
-type ComponentWithChildProps = React.PropsWithChildren<{ example?: string }>;
+// type ComponentWithChildProps = React.PropsWithChildren<{ example?: string }>;
 interface LayoutProps {
   displayName: String;
   children: React.ReactNode;
 }
-const Layout: React.FC<LayoutProps> = ({
-  children,
-  displayName,
-  ...others
-}) => {
+const Layout: React.FC<LayoutProps> = ({ children, displayName }) => {
   // console.log("%%%: ", children);
   return (
     <>
@@ -25,8 +21,8 @@ const Layout: React.FC<LayoutProps> = ({
   );
 };
 
-const styles = {
-  main: "p-4",
-};
+// const styles = {
+//   main: "p-4",
+// };
 
 export default Layout;

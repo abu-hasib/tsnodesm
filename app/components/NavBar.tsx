@@ -16,8 +16,8 @@ const NavBar: React.FC<NavBarProps> = () => {
   });
   useEffect(() => {
     // console.log("##: ", typeof window === "undefined");
-    setIsServer(typeof window === "undefined"), [];
-  });
+    setIsServer(typeof window === "undefined");
+  }, []);
   // console.log("$$: ", data);
   let body;
   if (fetching || error) {

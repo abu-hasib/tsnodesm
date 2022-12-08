@@ -4,13 +4,12 @@ import router from "next/router";
 import * as React from "react";
 import InputField from "../components/InputField";
 import Layout from "../components/Layout";
-import { useCreatePostMutation, useMeQuery } from "../src/generated/graphql";
-import { toErrorMap } from "../src/helpers/toErrorMap";
+import { useCreatePostMutation } from "../src/generated/graphql";
 import { createUrqlClient } from "../src/utils/createUrqlClient";
 import { useIsAuth } from "../src/utils/isAuth";
 
 interface createPostProps {}
-const CreatePost: React.FC<createPostProps> = (props) => {
+const CreatePost: React.FC<createPostProps> = () => {
   const [, createPost] = useCreatePostMutation();
   useIsAuth();
   return (
@@ -80,6 +79,6 @@ const styles = {
 };
 
 export default withUrqlClient(createUrqlClient)(CreatePost);
-function setErrors(arg0: any) {
-  throw new Error("Function not implemented.");
-}
+// function setErrors(arg0: any) {
+//   throw new Error("Function not implemented.");
+// }

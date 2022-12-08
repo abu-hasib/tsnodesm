@@ -98,10 +98,10 @@ export const createUrqlClient = (ssrExchange: any) => ({
       },
       updates: {
         Mutation: {
-          createPost: (_result, args, cache, info) => {
+          createPost: (_result, _args, cache, _info) => {
             cache.invalidate("Query", "getPosts", { limit: 10 });
           },
-          login: (_result, args, cache, info) => {
+          login: (_result, _args, cache, _info) => {
             typedUpdateQuery<LoginMutation, MeQuery>(
               cache,
               { query: MeDocument },
@@ -117,7 +117,7 @@ export const createUrqlClient = (ssrExchange: any) => ({
               }
             );
           },
-          register: (_result, args, cache, info) => {
+          register: (_result, _args, cache, _info) => {
             typedUpdateQuery<RegisterMutation, MeQuery>(
               cache,
               { query: MeDocument },
@@ -133,7 +133,7 @@ export const createUrqlClient = (ssrExchange: any) => ({
               }
             );
           },
-          logout: (_result, args, cache, info) => {
+          logout: (_result, _args, cache, _info) => {
             typedUpdateQuery<LogoutMutation, MeQuery>(
               cache,
               { query: MeDocument },
@@ -143,12 +143,12 @@ export const createUrqlClient = (ssrExchange: any) => ({
               }
             );
           },
-          changePassword: (_result, args, cache, info) => {
+          changePassword: (_result, _args, cache, _info) => {
             typedUpdateQuery<ChangePasswordMutation, MeQuery>(
               cache,
               { query: MeDocument },
               _result,
-              (result, query) => {
+              (result, _query) => {
                 return {
                   me: result.changePassword.user,
                 };
