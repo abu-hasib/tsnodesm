@@ -20,8 +20,6 @@ import {
   RegisterMutation,
 } from "../generated/graphql";
 
-const url = "http://localhost:4000/graphql";
-
 function typedUpdateQuery<Result, Query>(
   cache: Cache,
   qi: QueryInput,
@@ -85,9 +83,8 @@ const cursorPagination = (): Resolver => {
   };
 };
 
-console.log("$$: ", process.env);
 export const createUrqlClient = (ssrExchange: any) => ({
-  url: process.env.NEXT_GQL_URL || url,
+  url: process.env.NEXT_PUBLIC_GQL_URL as string,
   fetchOptions: {
     credentials: "include" as const,
   },
