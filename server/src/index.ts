@@ -46,7 +46,10 @@ async function main() {
 
     // ioredis
     // const Redis = require("ioredis");
-    let redisClient = new Redis();
+    let redisClient = new Redis({
+      port: 6379,
+      host: process.env.REDIS_HOST,
+    });
     app.use(
       cors({
         origin: "http://localhost:3000",

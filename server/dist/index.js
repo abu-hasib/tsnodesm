@@ -25,7 +25,10 @@ async function main() {
             data_source_1.AppDataSource.runMigrations();
             console.log("Data Source has been initialized!!");
         });
-        let redisClient = new ioredis_1.default();
+        let redisClient = new ioredis_1.default({
+            port: 6379,
+            host: process.env.REDIS_HOST,
+        });
         app.use((0, cors_1.default)({
             origin: "http://localhost:3000",
             credentials: true,
