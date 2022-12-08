@@ -12,6 +12,7 @@ const upvote_entity_1 = require("./entities/upvote.entity");
 exports.AppDataSource = new typeorm_1.DataSource({
     type: "postgres",
     username: process.env.TYPEORM_USERNAME,
+    password: process.env.TYPEORM_PASSWORD,
     host: process.env.TYPEORM_HOST,
     port: process.env.TYPEORM_PORT,
     database: "tsnodesm2",
